@@ -1,4 +1,8 @@
-const TransactionsTable = ({ data, head }) => {
+const TransactionsTable = ({ data, head, cColor = "bg-gray-100" }) => {
+  const renderData = (data) => {
+    if (data?.func) return data?.func(data);
+    return data?.value;
+  };
   return (
     <table className="table-auto w-full border-collapse border border-gray-300">
       <thead>
@@ -16,13 +20,10 @@ const TransactionsTable = ({ data, head }) => {
       </thead>
       <tbody>
         {data?.map((dataSet, index) => (
-          <tr
-            key={index}
-            className={index % 2 === 0 ? "bg-gray-100" : "bg-white"}
-          >
+          <tr key={index} className={index % 2 === 0 ? cColor : "bg-white"}>
             {dataSet.map((data, index) => (
               <td key={index} className="border border-gray-300 p-2">
-                {data?.value}
+                {renderData(data)}
               </td>
             ))}
             {/* <td className="border border-gray-300 p-2">{transaction.type}</td>

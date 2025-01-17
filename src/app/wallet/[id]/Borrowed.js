@@ -3,70 +3,91 @@ import { faDownload, faSearch } from "@fortawesome/free-solid-svg-icons";
 import TransactionsTable from "./components/TransactionTable"; // Adjust the path as needed
 
 export default function Transactions() {
+  const renderPay = (data) => {
+    return (
+      <button className="bg-green-500 text-white font-bold text-sm px-3 py-1 rounded">Pay</button>
+    );
+  };
   const transactions = [
     [
       { value: "Deposit" },
       { value: 500 },
       { value: "2nd January 2025" },
       { value: "New Fibre Installations" },
+      { func: renderPay },
     ],
     [
       { value: "Spend" },
       { value: 500 },
       { value: "2nd January 2025" },
       { value: "New Fibre Installations" },
+      { func: renderPay },
     ],
     [
       { value: "Deposit" },
       { value: 500 },
       { value: "2nd January 2025" },
       { value: "New Fibre Installations" },
+      { func: renderPay },
     ],
     [
       { value: "Spend" },
       { value: 500 },
       { value: "2nd January 2025" },
       { value: "New Fibre Installations" },
+      { func: renderPay },
     ],
     [
       { value: "Spend" },
       { value: 500 },
       { value: "2nd January 2025" },
       { value: "New Fibre Installations" },
+      { func: renderPay },
     ],
     [
       { value: "LTF" },
       { value: 500 },
       { value: "2nd January 2025" },
       { value: "New Fibre Installations" },
+      { func: renderPay },
     ],
     [
       { value: "LTF" },
       { value: 500 },
       { value: "2nd January 2025" },
       { value: "New Fibre Installations" },
+      { func: renderPay },
     ],
     [
       { value: "LTF" },
       { value: 500 },
       { value: "2nd January 2025" },
       { value: "New Fibre Installations" },
+      { func: renderPay },
     ],
     [
       { value: "LTF" },
       { value: 500 },
       { value: "2nd January 2025" },
       { value: "New Fibre Installations" },
+      { func: renderPay },
     ],
     [
       { value: "LTF" },
       { value: 500 },
       { value: "2nd January 2025" },
       { value: "New Fibre Installations" },
+      { func: renderPay },
     ],
   ];
 
-  const tableHeadings = ["Wallet Source", "Amount", "Date", "Description"];
+  const tableHeadings = [
+    "Wallet Source",
+    "Amount",
+    "Date",
+    "Description",
+    "Action",
+  ];
 
   return (
     <div className="py-8">
@@ -93,7 +114,11 @@ export default function Transactions() {
       </div>
 
       <div className=" shadow-xl bg-white rounded-lg p-4">
-        <TransactionsTable data={transactions} head={tableHeadings} />
+        <TransactionsTable
+          data={transactions}
+          head={tableHeadings}
+          cColor="bg-orange-50"
+        />
       </div>
     </div>
   );
