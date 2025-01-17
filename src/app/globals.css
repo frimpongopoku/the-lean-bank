@@ -17,5 +17,5 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: "Manrope", Helvetica, sans-serif;
+  font-family: var(--font-geist-mono), Helvetica, sans-serif;
 }
