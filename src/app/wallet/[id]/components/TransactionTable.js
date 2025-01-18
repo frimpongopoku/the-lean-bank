@@ -12,10 +12,6 @@ const TransactionsTable = ({ data, head, cColor = "bg-gray-100" }) => {
               {h}
             </th>
           ))}
-          {/* <th className="border border-gray-300 p-2">Type</th>
-          <th className="border border-gray-300 p-2">Amount</th>
-          <th className="border border-gray-300 p-2">Date</th>
-          <th className="border border-gray-300 p-2">Description</th> */}
         </tr>
       </thead>
       <tbody>
@@ -26,20 +22,6 @@ const TransactionsTable = ({ data, head, cColor = "bg-gray-100" }) => {
                 {renderData(data)}
               </td>
             ))}
-            {/* <td className="border border-gray-300 p-2">{transaction.type}</td>
-            <td
-              className={`border border-gray-300 p-2 ${
-                transaction.type === "Deposit"
-                  ? "text-green-500"
-                  : "text-red-500"
-              }`}
-            >
-              {transaction.amount}
-            </td>
-            <td className="border border-gray-300 p-2">{transaction.date}</td>
-            <td className="border border-gray-300 p-2">
-              {transaction.description}
-            </td> */}
           </tr>
         ))}
       </tbody>

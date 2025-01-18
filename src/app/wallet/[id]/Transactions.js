@@ -1,6 +1,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDownload, faSearch } from "@fortawesome/free-solid-svg-icons";
 import TransactionsTable from "./components/TransactionTable"; // Adjust the path as needed
+import Loading from "@/app/components/Loading";
 
 export default function Transactions() {
   const transactions = [
@@ -82,6 +83,8 @@ export default function Transactions() {
           <FontAwesomeIcon icon={faSearch} /> Search
         </button>
       </div>
+
+      <Loading />
 
       <div className="flex gap-4 mb-4">
         <a href="#" className="text-green-600 font-bold">
