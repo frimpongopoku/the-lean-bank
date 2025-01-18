@@ -65,7 +65,7 @@ function WalletService() {
             GCB Ghana Cedi
           </p>
           <div className="flex flex-row items-center">
-            <p className="text-green-500 ml-2 text-4xl mr-2">GHS 12,456</p>
+            <p className="text-green-500 ml-2 text-4xl mr-2">GHS12,456</p>
             <FontAwesomeIcon
               onClick={edit}
               icon={faEdit}

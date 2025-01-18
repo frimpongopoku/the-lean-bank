@@ -9,6 +9,7 @@ const InputField = ({
   maxLength,
   required = false,
   textarea,
+  name,
 }) => {
   const labelJsx = (
     <label
@@ -24,6 +25,7 @@ const InputField = ({
       <div className="mb-4">
         {labelJsx}
         <textarea
+          name={name}
           id={label}
           type={type}
           value={value}
@@ -38,9 +40,10 @@ const InputField = ({
     <div className="mb-4">
       {labelJsx}
       <input
+        name={name}
         id={label}
         type={type}
-        value={value}
+        value={value || ""}
         onChange={onChange}
         maxLength={maxLength}
         required={required}

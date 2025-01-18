@@ -13,8 +13,8 @@ import { useModal } from "../wallet/[id]/components/EBModal";
 import CreateOrEditPotForm from "./CreateOrEditPotForm";
 
 const banks = [
-  { id: 1, name: "GCB Ghana Cedi", balance: "GHS 14,500" },
-  { id: 2, name: "First Atlantic USD", balance: "GHS 14,500" },
+  { id: 1, name: "GCB Ghana Cedi", balance: "14,500" },
+  { id: 2, name: "First Atlantic USD", balance: "14,500" },
 ];
 
 const Home = () => {
@@ -49,7 +49,10 @@ const Home = () => {
             <h2 className=" group-hover:text-white font-semibold mb-2 text-lmd">
               {bank.name}
             </h2>
-            <p className="text-green-500 group-hover:text-green-50 font-bold mb-4 text-3xl">
+            <p
+              onClick={() => window.open("/wallet/bomb", "_blank")}
+              className="text-green-500 hover:underline group-hover:text-green-50 font-bold mb-4 text-3xl"
+            >
               {bank.balance}
             </p>
             <div className="flex flex-row items-center">

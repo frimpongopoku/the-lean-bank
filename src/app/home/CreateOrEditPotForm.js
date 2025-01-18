@@ -39,6 +39,16 @@ function CreateOrEditPotForm() {
           value={formData.name}
           onChange={handleChange}
           placeholder="Enter name"
+          maxLength={40}
+        />
+        <InputField
+          label="Currency"
+          name="currency"
+          type="text"
+          value={formData.currency}
+          onChange={handleChange}
+          placeholder="Enter currency"
+          maxLength={3}
         />
         <InputField
           label="Amount"
@@ -56,6 +66,7 @@ function CreateOrEditPotForm() {
           value={formData.description}
           onChange={handleChange}
           placeholder="Enter description"
+          maxLength={100}
         />
         <SubmitButton text="Create" />
       </form>
