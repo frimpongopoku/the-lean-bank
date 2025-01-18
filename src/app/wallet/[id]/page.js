@@ -15,6 +15,8 @@ import Borrowed from "./Borrowed";
 import { TabViewer } from "@/app/components/TabViewer";
 import { useModal } from "./components/EBModal";
 import Loading from "@/app/components/Loading";
+import CreateOrEditPartition from "../forms/CreateOrEditPartition";
+import CreateOrEditPotForm from "@/app/home/CreateOrEditPotForm";
 
 function WalletService() {
   const { Modal, openModal } = useModal();
@@ -37,10 +39,10 @@ function WalletService() {
   ];
 
   const edit = () => {
-    openModal(<div>Edit</div>);
+    openModal(<CreateOrEditPotForm />);
   };
   const addPartition = () => {
-    openModal(<div>Add Partition</div>);
+    openModal(<CreateOrEditPartition />);
   };
 
   return (

@@ -9,6 +9,9 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import { useModal } from "./components/EBModal";
+import DepositForm from "../forms/DepositForm";
+import SpendForm from "../forms/SpendForm";
+import BorrowForm from "../forms/BorrowForm";
 function Partitions() {
   const { Modal, openModal } = useModal();
   const partitions = [
@@ -30,13 +33,13 @@ function Partitions() {
   ];
 
   const deposit = () => {
-    openModal(<div>Deposit</div>);
+    openModal(<DepositForm />);
   };
   const spend = () => {
-    openModal(<div>Spend</div>);
+    openModal(<SpendForm />);
   };
   const borrow = () => {
-    openModal(<div>Borrow</div>);
+    openModal(<BorrowForm />);
   };
   return (
     <div className="py-6">
