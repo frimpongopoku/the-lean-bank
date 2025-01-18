@@ -12,6 +12,7 @@ import { useModal } from "./components/EBModal";
 import DepositForm from "../forms/DepositForm";
 import SpendForm from "../forms/SpendForm";
 import BorrowForm from "../forms/BorrowForm";
+import WalletDeleteConfirmation from "./components/WalletDeleteConfirmation";
 function Partitions() {
   const { Modal, openModal } = useModal();
   const partitions = [
@@ -41,6 +42,10 @@ function Partitions() {
   const borrow = () => {
     openModal(<BorrowForm />);
   };
+
+  const remove = () => {
+    openModal(<WalletDeleteConfirmation />);
+  };
   return (
     <div className="py-6">
       <Modal />
@@ -49,6 +54,7 @@ function Partitions() {
           deposit={deposit}
           spend={spend}
           borrow={borrow}
+          remove={remove}
           key={index}
           {...partition}
         />
@@ -95,6 +101,7 @@ const Card = ({
         <button className="text-red-400">
           {" "}
           <FontAwesomeIcon
+            onClick={remove}
             icon={faTrash}
             className=" h-5 w-5 cursor-pointer ml-2 md:mt-0"
           />

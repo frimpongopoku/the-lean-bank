@@ -1,11 +1,23 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDownload, faSearch } from "@fortawesome/free-solid-svg-icons";
 import TransactionsTable from "./components/TransactionTable"; // Adjust the path as needed
+import { useModal } from "./components/EBModal";
+import PayUpConfirmation from "./components/PayUpConfirmation";
 
 export default function Transactions() {
+  const { Modal, openModal } = useModal();
+
+  const payUp = () => {
+    openModal(<PayUpConfirmation />);
+  };
   const renderPay = (data) => {
     return (
-      <button className="bg-green-500 text-white font-bold text-sm px-3 py-1 rounded">Pay</button>
+      <button
+        onClick={payUp}
+        className="bg-green-500 text-white font-bold text-sm px-3 py-1 rounded"
+      >
+        Pay
+      </button>
     );
   };
   const transactions = [
@@ -91,6 +103,7 @@ export default function Transactions() {
 
   return (
     <div className="py-8">
+      <Modal />
       <h1 className="text-2xl font-bold mb-4">Transactions</h1>
 
       <div className="flex gap-4 mb-6">
