@@ -1,5 +1,11 @@
 "use client";
-import { faWallet } from "@fortawesome/free-solid-svg-icons";
+import {
+  faEdit,
+  faExternalLink,
+  faPlus,
+  faTrash,
+  faWallet,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import CenteredWrapper from "../components/CenteredWrapper";
@@ -28,7 +34,7 @@ const Home = () => {
       <div className="flex justify-center mb-6">
         <button
           onClick={handleAddBank}
-          className="font-bold bg-green-500 text-white px-4 py-2 rounded"
+          className="font-bold hover:bg-green-600 bg-green-500 text-white px-4 py-2 rounded"
         >
           Add a New Bank
         </button>
@@ -38,22 +44,41 @@ const Home = () => {
         {banks.map((bank) => (
           <div
             key={bank.id}
-            className="border border-green-500 rounded p-4 flex flex-col justify-between bg-white shadow-sm"
+            className="border group hover:bg-green-600 cursor-pointer border-green-500 rounded p-4 flex flex-col justify-between bg-white shadow-sm"
           >
-            <h2 className=" font-semibold mb-2 text-lg">{bank.name}</h2>
-            <p className="text-green-500 font-bold mb-4 text-3xl">
+            <h2 className=" group-hover:text-white font-semibold mb-2 text-lg">
+              {bank.name}
+            </h2>
+            <p className="text-green-500 group-hover:text-green-50 font-bold mb-4 text-3xl">
               {bank.balance}
             </p>
-            <FontAwesomeIcon
-              icon={faWallet}
-              className="text-green-500 w-8 h-8"
-            />
-            {/* <button className="text-red-500">Remove</button> */}
+            <div className="flex flex-row items-center">
+              <FontAwesomeIcon
+                icon={faExternalLink}
+                className="text-green-500 group-hover:text-white w-5 h-5"
+              />
+              <span className="ml-1 font-bold group-hover:text-white text-sm hover:underline text-green-500">
+                Manage
+                {/* <FontAwesomeIcon icon={faExternalLink} className="  w-7 h-7" /> */}
+              </span>
+              <span className="ml-3 font-bold group-hover:text-white text-sm hover:underline text-cyan-600">
+                <FontAwesomeIcon icon={faEdit} className="  w-5 h-5" />
+                Edit
+              </span>
+              <span className="ml-auto font-bold group-hover:text-white text-md hover:scale-125 text-red-200">
+                <FontAwesomeIcon icon={faTrash} className="  w-7 h-7" />
+                {/* <span>Remove</span>{" "} */}
+              </span>
+            </div>
           </div>
         ))}
 
-        <div className="border border-gray-300 rounded p-4 flex flex-col items-center justify-center text-gray-400 cursor-pointer bg-white shadow-sm">
-          <span className="text-4xl">+</span>
+        <div className="border group hover:border-2 hover:border-green-500 border-gray-300 rounded p-4 flex flex-col items-center justify-center text-gray-400 cursor-pointer bg-white shadow-sm">
+          {/* <span className="text-4xl">+</span> */}
+          <FontAwesomeIcon
+            icon={faPlus}
+            className="text-4xl text-gray-300 group-hover:text-green-500"
+          />
         </div>
       </div>
     </CenteredWrapper>
