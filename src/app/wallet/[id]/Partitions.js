@@ -95,7 +95,7 @@ const Card = ({
           {" "}
           <FontAwesomeIcon
             icon={faBook}
-            className=" h-5 w-5 cursor-pointer ml-2 md:mt-0"
+            className=" text-xl hover:text-blue-500 hover:scale-125 cursor-pointer ml-2 md:mt-0"
           />
         </button>
         <button className="text-red-400">
@@ -103,7 +103,7 @@ const Card = ({
           <FontAwesomeIcon
             onClick={remove}
             icon={faTrash}
-            className=" h-5 w-5 cursor-pointer ml-2 md:mt-0"
+            className=" text-xl hover:text-red-500 hover:scale-125  cursor-pointer ml-2 md:mt-0"
           />
         </button>
       </div>
