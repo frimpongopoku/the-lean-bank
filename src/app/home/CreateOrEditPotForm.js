@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import InputField from "../wallet/forms/InputField";
-import SubmitButton from "../wallet/forms/SubmitButton";
+import InputField from "../pot/forms/InputField";
+import SubmitButton from "../pot/forms/SubmitButton";
 
 function CreateOrEditPotForm() {
   const [formData, setFormData] = useState({
