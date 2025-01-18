@@ -2,6 +2,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDownload, faSearch } from "@fortawesome/free-solid-svg-icons";
 import TransactionsTable from "./components/TransactionTable"; // Adjust the path as needed
 import Loading from "@/app/components/Loading";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import { generatePDF } from "@/app/lib/utils";
 
 export default function Transactions() {
   const transactions = [
@@ -13,54 +16,6 @@ export default function Transactions() {
     ],
     [
       { value: "Spend" },
-      { value: 500 },
-      { value: "2nd January 2025" },
-      { value: "New Fibre Installations" },
-    ],
-    [
-      { value: "Deposit" },
-      { value: 500 },
-      { value: "2nd January 2025" },
-      { value: "New Fibre Installations" },
-    ],
-    [
-      { value: "Spend" },
-      { value: 500 },
-      { value: "2nd January 2025" },
-      { value: "New Fibre Installations" },
-    ],
-    [
-      { value: "Spend" },
-      { value: 500 },
-      { value: "2nd January 2025" },
-      { value: "New Fibre Installations" },
-    ],
-    [
-      { value: "LTF" },
-      { value: 500 },
-      { value: "2nd January 2025" },
-      { value: "New Fibre Installations" },
-    ],
-    [
-      { value: "LTF" },
-      { value: 500 },
-      { value: "2nd January 2025" },
-      { value: "New Fibre Installations" },
-    ],
-    [
-      { value: "LTF" },
-      { value: 500 },
-      { value: "2nd January 2025" },
-      { value: "New Fibre Installations" },
-    ],
-    [
-      { value: "LTF" },
-      { value: 500 },
-      { value: "2nd January 2025" },
-      { value: "New Fibre Installations" },
-    ],
-    [
-      { value: "LTF" },
       { value: 500 },
       { value: "2nd January 2025" },
       { value: "New Fibre Installations" },
@@ -84,18 +39,19 @@ export default function Transactions() {
         </button>
       </div>
 
-      <Loading />
-
       <div className="flex gap-4 mb-4">
-        <a href="#" className="text-green-600 font-bold">
+        <button
+          onClick={generatePDF}
+          className="text-green-600 font-bold flex items-center gap-2"
+        >
           <FontAwesomeIcon icon={faDownload} /> Download
-        </a>
+        </button>
         <a href="#" className="text-green-600 font-bold">
           Show All
         </a>
       </div>
 
-      <div className=" shadow-xl bg-white rounded-lg p-4">
+      <div className="printable-area shadow-xl bg-white rounded-lg p-4">
         <TransactionsTable data={transactions} head={tableHeadings} />
       </div>
     </div>

@@ -52,15 +52,15 @@ const Home = () => {
             <p className="text-green-500 group-hover:text-green-50 font-bold mb-4 text-3xl">
               {bank.balance}
             </p>
-            <div
-              className="flex flex-row items-center"
-              onClick={() => window.open("/wallet/bomb", "_blank")}
-            >
-              <FontAwesomeIcon
-                icon={faExternalLink}
-                className="text-green-500 group-hover:text-white w-5 h-5"
-              />
-              <span className="ml-1 font-bold group-hover:text-white text-sm hover:underline text-green-500">
+            <div className="flex flex-row items-center">
+              <span
+                onClick={() => window.open("/wallet/bomb", "_blank")}
+                className="ml-1 font-bold group-hover:text-white text-sm hover:underline text-green-500"
+              >
+                <FontAwesomeIcon
+                  icon={faExternalLink}
+                  className="text-green-500 group-hover:text-white w-5 h-5"
+                />
                 Manage
                 {/* <FontAwesomeIcon icon={faExternalLink} className="  w-7 h-7" /> */}
               </span>
