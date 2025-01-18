@@ -8,6 +8,9 @@ import {
   faEdit,
   faBook,
   faMoneyBillTransfer,
+  faArrowAltCircleLeft,
+  faArrowCircleLeft,
+  faLongArrowAltLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import Partitions from "./Partitions";
 import Transactions from "./Transactions";
@@ -17,9 +20,11 @@ import { useModal } from "./components/EBModal";
 import Loading from "@/app/components/Loading";
 import CreateOrEditPartition from "../forms/CreateOrEditPartition";
 import CreateOrEditPotForm from "@/app/home/CreateOrEditPotForm";
+import { useRouter } from "next/navigation";
 
 function WalletService() {
   const { Modal, openModal } = useModal();
+  const router = useRouter();
   const tabs = [
     {
       label: "Partitions",
@@ -51,7 +56,14 @@ function WalletService() {
       <div className="w-full max-w-4xl p-4 md:p-8">
         {/* Header */}
         <div className="text-xl md:text-2xl font-bold mb-6 flex flex-col   ">
-          <p className="text-gray-800 text-6xl mb-2">GCB Ghana Cedi</p>
+          <p className="text-gray-800 text-6xl mb-2 flex flex-row items-center">
+            <FontAwesomeIcon
+              onClick={() => router.back()}
+              icon={faLongArrowAltLeft}
+              className="text-4xl mr-4 text-gray-600 hover:text-green-500 cursor-pointer"
+            />
+            GCB Ghana Cedi
+          </p>
           <div className="flex flex-row items-center">
             <p className="text-green-500 ml-2 text-4xl mr-2">GHS 12,456</p>
             <FontAwesomeIcon
