@@ -1,7 +1,10 @@
+"use client";
 import { faWallet } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import CenteredWrapper from "../components/CenteredWrapper";
+import { useModal } from "../wallet/[id]/components/EBModal";
+import CreateOrEditPotForm from "./CreateOrEditPotForm";
 
 const banks = [
   { id: 1, name: "GCB Ghana Cedi", balance: "GHS 14,500" },
@@ -9,15 +12,24 @@ const banks = [
 ];
 
 const Home = () => {
+  const { Modal, openModal } = useModal();
+
+  const handleAddBank = () => {
+    openModal(<CreateOrEditPotForm />);
+  };
   return (
     <CenteredWrapper>
+      <Modal />
       <h1 className="text-6xl font-bold mb-4 text-center">Banks</h1>
       <p className="text-gray-600 mb-6 text-center">
         Manage your bank accounts here
       </p>
 
       <div className="flex justify-center mb-6">
-        <button className="bg-green-500 text-white px-4 py-2 rounded">
+        <button
+          onClick={handleAddBank}
+          className="font-bold bg-green-500 text-white px-4 py-2 rounded"
+        >
           Add a New Bank
         </button>
       </div>
