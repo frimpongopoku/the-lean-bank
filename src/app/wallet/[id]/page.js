@@ -64,13 +64,33 @@ function WalletService() {
             />
             GCB Ghana Cedi
           </p>
-          <div className="flex flex-row items-center">
-            <p className="text-green-500 ml-2 text-4xl mr-2">GHS12,456</p>
-            <FontAwesomeIcon
-              onClick={edit}
-              icon={faEdit}
-              className="ml-2 h-5 w-5 text-green-500 hover:text-green-600 cursor-pointer"
-            />
+          <div className="my-4 bg-white border-green-600 flex flex-row items-center  shadow-md rounded-md mx-2 p-5">
+            <div className="flex flex-row items-center">
+              <p className="text-green-700 flex flex-col ml-2 text-4xl mr-2">
+                <span>GHS12,456</span>
+
+                <span className="text-sm">Actual Account Value</span>
+              </p>
+              <FontAwesomeIcon
+                onClick={edit}
+                icon={faEdit}
+                className="ml-2 text-3xl text-green-700 hover:text-green-600 cursor-pointer"
+              />
+            </div>
+            <div className="flex flex-row items-center mx-6">
+              <p className="text-cyan-600 flex flex-col ml-2 text-4xl mr-2">
+                <span>GHS 1,456</span>
+
+                <span className="text-sm">Unassigned (A.k.a Free Money)</span>
+              </p>
+            </div>
+            <div className="flex flex-row items-center  mx-6">
+              <p className="text-green-500 flex flex-col ml-2 text-4xl mr-2">
+                <span>Valid</span>
+
+                <span className="text-sm">Checksum</span>
+              </p>
+            </div>
           </div>
 
           {/* Add Partition */}
