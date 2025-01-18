@@ -46,13 +46,16 @@ const Home = () => {
             key={bank.id}
             className="border group hover:bg-green-600 cursor-pointer border-green-500 rounded p-4 flex flex-col justify-between bg-white shadow-sm"
           >
-            <h2 className=" group-hover:text-white font-semibold mb-2 text-lg">
+            <h2 className=" group-hover:text-white font-semibold mb-2 text-lmd">
               {bank.name}
             </h2>
             <p className="text-green-500 group-hover:text-green-50 font-bold mb-4 text-3xl">
               {bank.balance}
             </p>
-            <div className="flex flex-row items-center">
+            <div
+              className="flex flex-row items-center"
+              onClick={() => window.open("/wallet/bomb", "_blank")}
+            >
               <FontAwesomeIcon
                 icon={faExternalLink}
                 className="text-green-500 group-hover:text-white w-5 h-5"
