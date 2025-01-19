@@ -7,10 +7,10 @@ import "jspdf-autotable";
 import { generatePDF } from "@/app/lib/utils";
 import { TRANSACTIONS } from "@/app/seed/transaction-seed";
 
-export default function Transactions() {
+export default function Transactions({ data }) {
   const transformToTableFormat = (transactions) => {
     return transactions.map((txn) => [
-      { value: txn.id },
+      // { value: txn.id },
       { value: txn.date },
       { value: txn.type },
       { value: txn.amount },
@@ -19,10 +19,10 @@ export default function Transactions() {
     ]);
   };
 
-  const transactions = transformToTableFormat(TRANSACTIONS);
+  const transactions = transformToTableFormat(data);
 
   const tableHeadings = [
-    "ID",
+    // "ID",
     "Date",
     "Type",
     "Amount",

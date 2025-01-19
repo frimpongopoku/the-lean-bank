@@ -1,11 +1,14 @@
 import React from "react";
 import { PotsProvider } from "../hooks/contexts/usePots";
 import PotHome from "./PotHome";
+import { TransactionProvider } from "../hooks/contexts/useTransactions";
 
 function HomeServerEntry() {
   return (
     <PotsProvider>
-      <PotHome />
+      <TransactionProvider>
+        <PotHome />
+      </TransactionProvider>
     </PotsProvider>
   );
 }

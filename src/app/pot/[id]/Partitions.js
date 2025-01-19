@@ -15,6 +15,7 @@ import SpendForm from "../forms/SpendForm";
 import BorrowForm from "../forms/BorrowForm";
 import WalletDeleteConfirmation from "./components/WalletDeleteConfirmation";
 import { usePots } from "@/app/hooks/contexts/usePots";
+import { useTransactions } from "@/app/hooks/contexts/useTransactions";
 function Partitions({
   data,
   totalSum,
@@ -22,11 +23,22 @@ function Partitions({
   editPartition,
   onRemove,
   createPartition,
+  createDeposit,
+  createWithdrawal,
 }) {
   const { Modal, openModal, closeModal } = useModal();
 
-  const deposit = () => {
-    openModal(<DepositForm />);
+  const { transactions, addDeposit, addWithdrawal } = useTransactions();
+
+  const deposit = (partition) => {
+    openModal(
+      <DepositForm
+        onSubmit={(content) => {
+          createDeposit(content, partition);
+          closeModal();
+        }}
+      />
+    );
   };
   const spend = () => {
     openModal(<SpendForm />);
@@ -74,7 +86,7 @@ function Partitions({
       <Modal />
       {data?.map((partition, index) => (
         <Card
-          deposit={deposit}
+          deposit={() => deposit(partition)}
           spend={spend}
           borrow={borrow}
           remove={() => remove(partition.id)}

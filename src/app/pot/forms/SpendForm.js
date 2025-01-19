@@ -12,8 +12,8 @@ const SpendForm = ({
   const [formData, setFormData] = useState({ amount: "", description: "" });
 
   const handleChange = (e) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e) => {
@@ -30,12 +30,14 @@ const SpendForm = ({
       <InputField
         label="Amount"
         type="number"
+        name="amount"
         value={formData.amount}
         onChange={handleChange}
         required
       />
       <InputField
         textarea
+        name="description"
         label="Description"
         value={formData.description}
         onChange={handleChange}

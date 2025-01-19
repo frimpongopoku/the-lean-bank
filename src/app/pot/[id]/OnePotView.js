@@ -25,11 +25,14 @@ import { usePots } from "@/app/hooks/contexts/usePots";
 import Fallback from "@/app/components/Fallback";
 import FreeMoneySummary from "./components/FreeMoneySummary";
 import ChecksumSummary from "./components/ChecksumSummary";
+import { useTransactions } from "@/app/hooks/contexts/useTransactions";
 
 function OnePotView({ potId }) {
   const { Modal, openModal, closeModal } = useModal();
   const { pots, editPot, addPartToPot, updatePartInPot, removePartFromPot } =
     usePots();
+
+  const { transactions, addDeposit, addWithdrawal } = useTransactions();
 
   const targetPot = pots.find((pot) => pot.id?.toString() === potId);
 
@@ -46,9 +49,10 @@ function OnePotView({ potId }) {
     );
   };
 
+  //  ------------------- 0. Loading -------------------
   if (!targetPot) return <Loading full />;
 
-  //   ------------------- 1. Fallback -------------------
+  //   ------------------- 1. IF Not Found -------------------
 
   if (!potId || !targetPot)
     return <Fallback message="Pot not found" backUrl="/home" />;
@@ -79,6 +83,16 @@ function OnePotView({ potId }) {
   const removePartition = (id) => {
     removePartFromPot(targetPot?.id, id);
   };
+  // -------------------------------------------- Transaction & Borrowing Functions ----------------
+
+  const createDeposit = (content, partition) => {
+    addDeposit({ ...content, source: partition?.name });
+  };
+
+  const createWithdrawal = (content, partition) => {
+    addWithdrawal({ ...content, source: partition?.name });
+  };
+  // ----------------------------------------------- ---------------- ----------------------------
 
   const tabs = [
     {
@@ -92,13 +106,15 @@ function OnePotView({ potId }) {
           editPartition={createOrEditPartition}
           createPartition={createOrEditPartition}
           onRemove={removePartition}
+          createDeposit={createDeposit}
+          createWithdrawal={createWithdrawal}
         />
       ),
     },
     {
       label: "Transactions",
       icon: faBook,
-      content: <Transactions />,
+      content: <Transactions data={transactions} />,
     },
     {
       label: "Borrowed",
@@ -131,6 +147,7 @@ function OnePotView({ potId }) {
       />
     );
   };
+  // --------------------------------------------
 
   return (
     <CenteredWrapper>

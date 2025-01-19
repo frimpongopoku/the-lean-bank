@@ -1,4 +1,11 @@
+"use client";
 import { createContext, useContext, useReducer } from "react";
+
+const generateTransactionId = () => {
+  const timestamp = Date.now().toString(36); // Convert current timestamp to base 36
+  const randomStr = Math.random().toString(36).substring(2, 8); // Generate random alphanumeric string
+  return `txn_${timestamp}_${randomStr}`;
+};
 
 // Define initial transactions state
 const initialTransactions = [
@@ -31,28 +38,28 @@ const transactionReducer = (state, action) => {
 
     case "ADD_DEPOSIT":
       return [
-        ...state,
         {
-          id: `txn${Date.now()}`,
-          date: action.payload.date,
+          id: generateTransactionId(),
+          date: action.payload.date || new Date().toLocaleDateString(),
           type: "Deposit",
           amount: action.payload.amount,
           source: action.payload.source,
           description: action.payload.description,
         },
+        ...state,
       ];
 
     case "ADD_WITHDRAWAL":
       return [
-        ...state,
         {
-          id: `txn${Date.now()}`,
-          date: action.payload.date,
+          id: generateTransactionId(),
+          date: action.payload.date || new Date().toLocaleDateString(),
           type: "Withdrawal",
           amount: action.payload.amount,
           source: action.payload.source,
           description: action.payload.description,
         },
+        ...state,
       ];
 
     default:
@@ -65,7 +72,10 @@ const TransactionContext = createContext();
 
 // Provider component
 export const TransactionProvider = ({ children }) => {
-  const [transactions, dispatch] = useReducer(transactionReducer, initialTransactions);
+  const [transactions, dispatch] = useReducer(
+    transactionReducer,
+    initialTransactions
+  );
 
   // Actions
   const addTransaction = (transaction) => {
@@ -76,23 +86,29 @@ export const TransactionProvider = ({ children }) => {
     dispatch({ type: "REMOVE_TRANSACTION", payload: id });
   };
 
-  const addDeposit = (date, amount, source, description) => {
+  const addDeposit = (data) => {
     dispatch({
       type: "ADD_DEPOSIT",
-      payload: { date, amount, source, description },
+      payload: data,
     });
   };
 
-  const addWithdrawal = (date, amount, source, description) => {
+  const addWithdrawal = (data) => {
     dispatch({
       type: "ADD_WITHDRAWAL",
-      payload: { date, amount, source, description },
+      payload: data,
     });
   };
 
   return (
     <TransactionContext.Provider
-      value={{ transactions, addTransaction, removeTransaction, addDeposit, addWithdrawal }}
+      value={{
+        transactions,
+        addTransaction,
+        removeTransaction,
+        addDeposit,
+        addWithdrawal,
+      }}
     >
       {children}
     </TransactionContext.Provider>
