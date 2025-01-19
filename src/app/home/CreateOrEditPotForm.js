@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import InputField from "../pot/forms/InputField";
 import SubmitButton from "../pot/forms/SubmitButton";
 
-function CreateOrEditPotForm() {
+function CreateOrEditPotForm({ onSubmit, isEdit, data }) {
   const [formData, setFormData] = useState({
     name: "",
     amount: "",
@@ -20,8 +20,14 @@ function CreateOrEditPotForm() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Form Submitted", formData);
+    if (isEdit) return onSubmit(formData);
+    onSubmit({ id: new Date()?.getMilliseconds(), ...formData });
     // Add logic to handle the form submission (e.g., API call)
   };
+
+  useEffect(() => {
+    setFormData(data);
+  }, [data?.toString()]);
 
   return (
     <div className="px-4">
@@ -52,9 +58,9 @@ function CreateOrEditPotForm() {
         />
         <InputField
           label="Amount"
-          name="amount"
+          name="balance"
           type="number"
-          value={formData.amount}
+          value={formData.balance}
           onChange={handleChange}
           placeholder="Enter amount"
         />
@@ -68,7 +74,7 @@ function CreateOrEditPotForm() {
           placeholder="Enter description"
           maxLength={100}
         />
-        <SubmitButton text="Create" />
+        <SubmitButton text={isEdit ? "Save" : "Create"} />
       </form>
     </div>
   );
