@@ -5,24 +5,30 @@ import Loading from "@/app/components/Loading";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { generatePDF } from "@/app/lib/utils";
+import { TRANSACTIONS } from "@/app/seed/transaction-seed";
 
 export default function Transactions() {
-  const transactions = [
-    [
-      { value: "Deposit" },
-      { value: 500 },
-      { value: "2nd January 2025" },
-      { value: "New Fibre Installations" },
-    ],
-    [
-      { value: "Spend" },
-      { value: 500 },
-      { value: "2nd January 2025" },
-      { value: "New Fibre Installations" },
-    ],
-  ];
+  const transformToTableFormat = (transactions) => {
+    return transactions.map((txn) => [
+      { value: txn.id },
+      { value: txn.date },
+      { value: txn.type },
+      { value: txn.amount },
+      { value: txn.source },
+      { value: txn.description },
+    ]);
+  };
 
-  const tableHeadings = ["Type", "Amount", "Date", "Description"];
+  const transactions = transformToTableFormat(TRANSACTIONS);
+
+  const tableHeadings = [
+    "ID",
+    "Date",
+    "Type",
+    "Amount",
+    "Source",
+    "Description",
+  ];
 
   return (
     <div className="py-8">
