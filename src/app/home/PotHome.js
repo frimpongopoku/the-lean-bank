@@ -26,6 +26,10 @@ const PotHome = () => {
   const handleAddBank = () => {
     openModal(<CreateOrEditPotForm />);
   };
+
+  const navigateToPot = (id) => {
+    window.open(`/pot/${id}`, "_blank");
+  };
   return (
     <CenteredWrapper>
       <Modal />
@@ -48,20 +52,20 @@ const PotHome = () => {
         {pots?.map((bank) => (
           <div
             key={bank.id}
-            className="border group hover:bg-green-600 cursor-pointer border-green-500 rounded p-4 flex flex-col justify-between bg-white shadow-sm"
+            className="shadow-md group hover:bg-green-600 cursor-pointer border-green-500 rounded p-4 flex flex-col justify-between bg-white"
           >
             <h2 className=" group-hover:text-white font-semibold mb-2 text-lmd">
               {bank.name}
             </h2>
             <p
-              onClick={() => window.open("/wallet/bomb", "_blank")}
+              onClick={() => navigateToPot(bank.id)}
               className="text-green-500 hover:underline group-hover:text-green-50 font-bold mb-4 text-3xl"
             >
               {bank.balance}
             </p>
             <div className="flex flex-row items-center">
               <span
-                onClick={() => window.open("/wallet/bomb", "_blank")}
+                onClick={() => navigateToPot(bank.id)}
                 className="ml-1 font-bold group-hover:text-white text-sm hover:underline text-green-500"
               >
                 <FontAwesomeIcon
@@ -83,7 +87,7 @@ const PotHome = () => {
           </div>
         ))}
 
-        <div className="border group hover:border-2 hover:border-green-500 border-gray-300 rounded p-4 flex flex-col items-center justify-center text-gray-400 cursor-pointer bg-white shadow-sm">
+        <div className="border group hover:border-2 hover:border-green-500 border-gray-300 rounded p-4 flex flex-col items-center justify-center text-gray-400 cursor-pointer shadow-sm">
           {/* <span className="text-4xl">+</span> */}
           <FontAwesomeIcon
             icon={faPlus}

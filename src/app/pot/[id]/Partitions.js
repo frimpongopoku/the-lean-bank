@@ -13,25 +13,25 @@ import DepositForm from "../forms/DepositForm";
 import SpendForm from "../forms/SpendForm";
 import BorrowForm from "../forms/BorrowForm";
 import WalletDeleteConfirmation from "./components/WalletDeleteConfirmation";
-function Partitions() {
+function Partitions({ data }) {
   const { Modal, openModal } = useModal();
-  const partitions = [
-    {
-      title: "Long Term Funds",
-      amount: "GHS 10,456",
-      description: "Long Term Funds",
-    },
-    {
-      title: "Short Term Funds",
-      amount: "GHS 10,456",
-      description: "Short Term Funds",
-    },
-    {
-      title: "Savings",
-      amount: "GHS 10,456",
-      description: "Savings",
-    },
-  ];
+  // const partitions = [
+  //   {
+  //     title: "Long Term Funds",
+  //     amount: "GHS 10,456",
+  //     description: "Long Term Funds",
+  //   },
+  //   {
+  //     title: "Short Term Funds",
+  //     amount: "GHS 10,456",
+  //     description: "Short Term Funds",
+  //   },
+  //   {
+  //     title: "Savings",
+  //     amount: "GHS 10,456",
+  //     description: "Savings",
+  //   },
+  // ];
 
   const deposit = () => {
     openModal(<DepositForm />);
@@ -49,7 +49,7 @@ function Partitions() {
   return (
     <div className="py-6">
       <Modal />
-      {partitions?.map((partition, index) => (
+      {data?.map((partition, index) => (
         <Card
           deposit={deposit}
           spend={spend}
@@ -64,8 +64,8 @@ function Partitions() {
 }
 
 const Card = ({
-  title,
-  amount,
+  name,
+  balance,
   description,
   deposit,
   spend,
@@ -75,19 +75,21 @@ const Card = ({
   return (
     <div className="mt-2 flex flex-col md:flex-row md:items-center justify-between bg-white p-6  rounded-md shadow-sm border border-gray-200">
       <div className="flex flex-row items-center ">
-        <FontAwesomeIcon
-          icon={faWallet}
-          className="text-green-500 h-10 w-10 mr-3"
-        />
         <div>
+          <div className="text-md text-gray-700 font-bold">{name}</div>
           <div className="flex flex-row text-2xl items-center font-bold text-green-500">
-            <span>{amount}</span>
+            <span className="flex flex-row items-center">
+              <FontAwesomeIcon
+                icon={faWallet}
+                className="text-green-500 text-2xl mr-3"
+              />
+              {balance?.toLocaleString()}
+            </span>
             <FontAwesomeIcon
               icon={faEdit}
               className="text-green-500 h-5 w-5 cursor-pointer ml-2 md:mt-0"
             />
           </div>
-          <div className="text-sm text-gray-700 font-bold">{description}</div>
         </div>
       </div>
       <div className="flex flex-col md:flex-row font-bold md:items-center gap-4 text-sm">

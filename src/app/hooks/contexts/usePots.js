@@ -1,51 +1,31 @@
 "use client";
+
 import React, { createContext, useContext, useState } from "react";
 
 export const POTS = [
   {
     name: "GCB Ghana Cedi",
-    balance: "GHS12,456",
+    balance: 12456,
     id: 1,
     currency: "GHS",
     parts: [
-      { name: "Savings", balance: "GHS 8,456", id: 1, currency: "GHS" },
-      { name: "Investment", balance: "GHS 34,456", id: 2, currency: "GHS" },
-      { name: "Emergency", balance: "GHS 50,456", id: 3, currency: "GHS" },
+      { name: "Savings", balance: 8456, id: 1, currency: "GHS" },
+      { name: "Investment", balance: 34456, id: 2, currency: "GHS" },
+      { name: "Emergency", balance: 50456, id: 3, currency: "GHS" },
     ],
   },
   {
     name: "First Atlantic USD",
-    balance: "USD 12,456",
+    balance: 12456,
     id: 2,
     currency: "USD",
     parts: [
-      { name: "Savings", balance: "USD 10,456", id: 1, currency: "USD" },
-      { name: "Investment", balance: "USD 102,456", id: 2, currency: "USD" },
-      { name: "Emergency", balance: "USD 9,456", id: 3, currency: "USD" },
+      { name: "Savings", balance: 10456, id: 1, currency: "USD" },
+      { name: "Investment", balance: 102456, id: 2, currency: "USD" },
+      { name: "Emergency", balance: 9456, id: 3, currency: "USD" },
     ],
   },
-  {
-    name: "Cal Bank",
-    balance: "GHS 12,456",
-    id: 3,
-    currency: "GHS",
-    parts: [
-      { name: "Savings", balance: "GHS 1,456", id: 1, currency: "GHS" },
-      { name: "Investment", balance: "GHS 456", id: 2, currency: "GHS" },
-      { name: "Emergency", balance: "GHS 2,456", id: 3, currency: "GHS" },
-    ],
-  },
-  {
-    name: "Sausage Business",
-    balance: "GHS 100,456",
-    id: 4,
-    currency: "GHS",
-    parts: [
-      { name: "Savings", balance: "GHS 1,456", id: 1, currency: "GHS" },
-      { name: "Investment", balance: "GHS 456", id: 2, currency: "GHS" },
-      { name: "Emergency", balance: "GHS 2,456", id: 3, currency: "GHS" },
-    ],
-  },
+  // Add more pots here...
 ];
 
 const PotsContext = createContext();
@@ -53,11 +33,87 @@ const PotsContext = createContext();
 export const PotsProvider = ({ children }) => {
   const [pots, setPots] = useState(POTS);
 
+  const addPot = (newPot) => {
+    setPots((prevPots) => [...prevPots, newPot]);
+  };
+
+  const removePot = (potId) => {
+    setPots((prevPots) => prevPots.filter((pot) => pot.id !== potId));
+  };
+
+  const editPot = (updatedPot) => {
+    setPots((prevPots) =>
+      prevPots.map((pot) =>
+        pot.id === updatedPot.id ? { ...pot, ...updatedPot } : pot
+      )
+    );
+  };
+
+  const addPartToPot = (potId, newPart) => {
+    setPots((prevPots) =>
+      prevPots.map((pot) => {
+        if (pot.id === potId) {
+          return {
+            ...pot,
+            parts: [...pot.parts, newPart],
+          };
+        }
+        return pot;
+      })
+    );
+  };
+
+  const removePartFromPot = (potId, partId) => {
+    setPots((prevPots) =>
+      prevPots.map((pot) => {
+        if (pot.id === potId) {
+          return {
+            ...pot,
+            parts: pot.parts.filter((part) => part.id !== partId),
+          };
+        }
+        return pot;
+      })
+    );
+  };
+
+  const updatePartInPot = (potId, updatedPart) => {
+    setPots((prevPots) =>
+      prevPots.map((pot) => {
+        if (pot.id === potId) {
+          return {
+            ...pot,
+            parts: pot.parts.map((part) =>
+              part.id === updatedPart.id ? { ...part, ...updatedPart } : part
+            ),
+          };
+        }
+        return pot;
+      })
+    );
+  };
+
   return (
-    <PotsContext.Provider value={{ pots, setPots }}>
+    <PotsContext.Provider
+      value={{
+        pots,
+        addPot,
+        removePot,
+        editPot,
+        addPartToPot,
+        removePartFromPot,
+        updatePartInPot,
+      }}
+    >
       {children}
     </PotsContext.Provider>
   );
 };
 
-export const usePots = () => useContext(PotsContext);
+export const usePots = () => {
+  const context = useContext(PotsContext);
+  if (!context) {
+    throw new Error("usePots must be used within a PotsProvider");
+  }
+  return context;
+};
