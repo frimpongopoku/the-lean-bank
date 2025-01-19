@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import CenteredWrapper from "@/app/components/CenteredWrapper";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -23,6 +23,8 @@ import CreateOrEditPotForm from "@/app/home/CreateOrEditPotForm";
 import { useParams } from "next/navigation";
 import { usePots } from "@/app/hooks/contexts/usePots";
 import Fallback from "@/app/components/Fallback";
+import FreeMoneySummary from "./components/FreeMoneySummary";
+import ChecksumSummary from "./components/ChecksumSummary";
 
 function OnePotView({ potId }) {
   const { Modal, openModal, closeModal } = useModal();
@@ -55,13 +57,12 @@ function OnePotView({ potId }) {
 
   const { name, parts, balance } = targetPot;
 
-  const sumOfAllPartitionBalance = parts.reduce(
-    (acc, part) => acc + Number(part?.balance),
-    0
+  const sumOfAllPartitionBalance = useMemo(
+    () => parts.reduce((acc, part) => acc + Number(part?.balance), 0),
+    [targetPot]
   );
 
   const createOrEditPartition = (content) => {
-    console.log("content", content);
     openModal(
       <CreateOrEditPartition
         mode={content ? "edit" : "create"}
@@ -108,8 +109,28 @@ function OnePotView({ potId }) {
   // --------------------------------------------
 
   const freeMoney = balance - sumOfAllPartitionBalance;
-  const checkSumIsValid = sumOfAllPartitionBalance + freeMoney === balance;
   const freeMoneyIsInvalid = freeMoney < 0;
+  const onlySumValidity =
+    sumOfAllPartitionBalance + freeMoney === Number(balance);
+  const checkSumIsValid = onlySumValidity && !freeMoneyIsInvalid;
+
+  const summarizeFreeMoney = () => {
+    openModal(
+      <FreeMoneySummary freeMoney={freeMoney} isValid={!freeMoneyIsInvalid} />
+    );
+  };
+  const summarizeChecksum = () => {
+    openModal(
+      <ChecksumSummary
+        balance={balance}
+        freeMoney={freeMoney}
+        sumOfAllPartitionBalance={sumOfAllPartitionBalance}
+        freeMoneyIsInvalid={freeMoneyIsInvalid}
+        isValid={checkSumIsValid}
+        onlySumValidity={onlySumValidity}
+      />
+    );
+  };
 
   return (
     <CenteredWrapper>
@@ -144,9 +165,11 @@ function OnePotView({ potId }) {
               <p
                 className={`${
                   freeMoneyIsInvalid ? "text-red-500" : "text-cyan-600"
-                } flex flex-col ml-2 text-3xl mr-2"`}
+                } flex flex-col ml-2 text-3xl mr-2  cursor-pointer`}
               >
-                <span>{freeMoney?.toLocaleString()}</span>
+                <span className="hover:underline" onClick={summarizeFreeMoney}>
+                  {freeMoney?.toLocaleString()}
+                </span>
 
                 <span className="text-sm">
                   {freeMoneyIsInvalid
@@ -159,9 +182,11 @@ function OnePotView({ potId }) {
               <p
                 className={`${
                   checkSumIsValid ? "text-green-500" : "text-red-500"
-                } flex flex-col ml-2 text-3xl mr-2`}
+                } flex flex-col ml-2 text-3xl mr-2   cursor-pointer`}
               >
-                <span>{checkSumIsValid ? "Valid" : "Invalid"}</span>
+                <span className="hover:underline" onClick={summarizeChecksum}>
+                  {checkSumIsValid ? "Valid" : "Invalid"}
+                </span>
 
                 <span className="text-sm">Checksum</span>
               </p>

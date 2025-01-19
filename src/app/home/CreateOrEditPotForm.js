@@ -19,7 +19,6 @@ function CreateOrEditPotForm({ onSubmit, isEdit, data }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Form Submitted", formData);
     if (isEdit) return onSubmit(formData);
     onSubmit({ id: new Date()?.getMilliseconds(), ...formData });
     // Add logic to handle the form submission (e.g., API call)

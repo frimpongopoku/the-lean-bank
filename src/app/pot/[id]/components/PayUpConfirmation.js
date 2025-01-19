@@ -17,7 +17,7 @@ const PayUpConfirmation = ({ onClose, onConfirm }) => {
 
   return (
     <div className="">
-      <div className="bg-white   p-6">
+      <div className="bg-white p-6">
         <h2 className="text-lg font-semibold mb-4 text-gray-800">
           How do you want to handle funds after payment?
         </h2>
