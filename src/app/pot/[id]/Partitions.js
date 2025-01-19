@@ -2,6 +2,7 @@ import {
   faBook,
   faDeleteLeft,
   faEdit,
+  faPlus,
   faRemove,
   faTrash,
   faWallet,
@@ -13,25 +14,16 @@ import DepositForm from "../forms/DepositForm";
 import SpendForm from "../forms/SpendForm";
 import BorrowForm from "../forms/BorrowForm";
 import WalletDeleteConfirmation from "./components/WalletDeleteConfirmation";
-function Partitions({ data }) {
-  const { Modal, openModal } = useModal();
-  // const partitions = [
-  //   {
-  //     title: "Long Term Funds",
-  //     amount: "GHS 10,456",
-  //     description: "Long Term Funds",
-  //   },
-  //   {
-  //     title: "Short Term Funds",
-  //     amount: "GHS 10,456",
-  //     description: "Short Term Funds",
-  //   },
-  //   {
-  //     title: "Savings",
-  //     amount: "GHS 10,456",
-  //     description: "Savings",
-  //   },
-  // ];
+import { usePots } from "@/app/hooks/contexts/usePots";
+function Partitions({
+  data,
+  totalSum,
+  targetPot,
+  editPartition,
+  onRemove,
+  createPartition,
+}) {
+  const { Modal, openModal, closeModal } = useModal();
 
   const deposit = () => {
     openModal(<DepositForm />);
@@ -43,19 +35,51 @@ function Partitions({ data }) {
     openModal(<BorrowForm />);
   };
 
-  const remove = () => {
-    openModal(<WalletDeleteConfirmation />);
+  const remove = (id) => {
+    openModal(
+      <WalletDeleteConfirmation
+        onConfirm={() => {
+          onRemove(id);
+          closeModal();
+        }}
+      />
+    );
   };
+
   return (
     <div className="py-6">
+      {totalSum ? (
+        <p className="mb-2">
+          <span>Total</span>{" "}
+          <span className="font-bold text-lg text-green-800">
+            {Number(totalSum)?.toLocaleString()}
+          </span>
+        </p>
+      ) : (
+        ""
+      )}
+      {!data?.length && (
+        <p className="text-gray-600 mb-4 text-center text-lg">
+          No partitions yet,{" "}
+          <span
+            onClick={() => createPartition()}
+            className="text-green-700 font-bold cursor-pointer hover:underline "
+          >
+            {" "}
+            <FontAwesomeIcon icon={faPlus} className="mr-2" />
+            start slicing!
+          </span>
+        </p>
+      )}
       <Modal />
       {data?.map((partition, index) => (
         <Card
           deposit={deposit}
           spend={spend}
           borrow={borrow}
-          remove={remove}
+          remove={() => remove(partition.id)}
           key={index}
+          editFxn={() => editPartition(partition)}
           {...partition}
         />
       ))}
@@ -71,6 +95,7 @@ const Card = ({
   spend,
   borrow,
   remove,
+  editFxn,
 }) => {
   return (
     <div className="mt-2 flex flex-col md:flex-row md:items-center justify-between bg-white p-6  rounded-md shadow-sm border border-gray-200">
@@ -83,11 +108,12 @@ const Card = ({
                 icon={faWallet}
                 className="text-green-500 text-2xl mr-3"
               />
-              {balance?.toLocaleString()}
+              {Number(balance)?.toLocaleString()}
             </span>
             <FontAwesomeIcon
+              onClick={editFxn}
               icon={faEdit}
-              className="text-green-500 h-5 w-5 cursor-pointer ml-2 md:mt-0"
+              className="text-green-500 hover:text-green-700 h-5 w-5 cursor-pointer ml-2 md:mt-0"
             />
           </div>
         </div>

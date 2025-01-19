@@ -25,19 +25,23 @@ import { usePots } from "@/app/hooks/contexts/usePots";
 import Fallback from "@/app/components/Fallback";
 
 function OnePotView({ potId }) {
-  const { Modal, openModal } = useModal();
-  const { pots } = usePots();
-
-  const { params } = useParams();
+  const { Modal, openModal, closeModal } = useModal();
+  const { pots, editPot, addPartToPot, updatePartInPot, removePartFromPot } =
+    usePots();
 
   const targetPot = pots.find((pot) => pot.id?.toString() === potId);
-  console.log("targetPot", targetPot);
 
-  const edit = () => {
-    openModal(<CreateOrEditPotForm />);
-  };
-  const addPartition = () => {
-    openModal(<CreateOrEditPartition />);
+  const editPotContent = () => {
+    openModal(
+      <CreateOrEditPotForm
+        isEdit={targetPot}
+        data={targetPot}
+        onSubmit={(content) => {
+          closeModal();
+          editPot(content);
+        }}
+      />
+    );
   };
 
   if (!targetPot) return <Loading full />;
@@ -50,11 +54,45 @@ function OnePotView({ potId }) {
   //   ------------------- -------------------
 
   const { name, parts, balance } = targetPot;
+
+  const sumOfAllPartitionBalance = parts.reduce(
+    (acc, part) => acc + Number(part?.balance),
+    0
+  );
+
+  const createOrEditPartition = (content) => {
+    console.log("content", content);
+    openModal(
+      <CreateOrEditPartition
+        mode={content ? "edit" : "create"}
+        data={content}
+        onSubmit={(formData) => {
+          closeModal();
+          if (content) return updatePartInPot(targetPot?.id, content);
+          addPartToPot(targetPot?.id, formData);
+        }}
+      />
+    );
+  };
+
+  const removePartition = (id) => {
+    removePartFromPot(targetPot?.id, id);
+  };
+
   const tabs = [
     {
       label: "Partitions",
       icon: faWallet,
-      content: <Partitions data={parts} />,
+      content: (
+        <Partitions
+          data={parts}
+          pot={targetPot}
+          totalSum={sumOfAllPartitionBalance}
+          editPartition={createOrEditPartition}
+          createPartition={createOrEditPartition}
+          onRemove={removePartition}
+        />
+      ),
     },
     {
       label: "Transactions",
@@ -67,19 +105,11 @@ function OnePotView({ potId }) {
       content: <Borrowed />,
     },
   ];
+  // --------------------------------------------
 
-  const sumOfAllPartitionBalance = parts.reduce(
-    (acc, part) => acc + part?.balance,
-    0
-  );
   const freeMoney = balance - sumOfAllPartitionBalance;
-
   const checkSumIsValid = sumOfAllPartitionBalance + freeMoney === balance;
   const freeMoneyIsInvalid = freeMoney < 0;
-
-  console.log("checkSumIsValid", checkSumIsValid);
-
-  //   console.log("partsSum", partsSum);
 
   return (
     <CenteredWrapper>
@@ -99,9 +129,9 @@ function OnePotView({ potId }) {
             <div className="flex flex-row items-center">
               <p className="text-green-700 flex flex-col ml-2 text-3xl mr-2">
                 <span className="flex flex-row items-center">
-                  {balance?.toLocaleString()}
+                  {Number(balance)?.toLocaleString()}
                   <FontAwesomeIcon
-                    onClick={edit}
+                    onClick={editPotContent}
                     icon={faEdit}
                     className="ml-2 text-2xl text-green-700 hover:text-green-600 cursor-pointer"
                   />
@@ -131,7 +161,7 @@ function OnePotView({ potId }) {
                   checkSumIsValid ? "text-green-500" : "text-red-500"
                 } flex flex-col ml-2 text-3xl mr-2`}
               >
-                <span>Valid</span>
+                <span>{checkSumIsValid ? "Valid" : "Invalid"}</span>
 
                 <span className="text-sm">Checksum</span>
               </p>
@@ -140,7 +170,7 @@ function OnePotView({ potId }) {
 
           {/* Add Partition */}
           <button
-            onClick={addPartition}
+            onClick={() => createOrEditPartition()}
             className="mt-4 md:mt-0 inline-flex hover:text-green-600 hover:underline  items-center text-lg text-green-700"
           >
             <FontAwesomeIcon icon={faPlus} className="mr-2 h-5 w-5" />

@@ -1,9 +1,9 @@
 // forms/CreateOrEditPartition.js
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import InputField from "./InputField";
 import SubmitButton from "./SubmitButton";
 
-const CreateOrEditPartition = ({ mode = "create", onSubmit }) => {
+const CreateOrEditPartition = ({ onSubmit, mode = "create", data }) => {
   const [formData, setFormData] = useState({
     name: "",
     abbreviation: "",
@@ -11,15 +11,21 @@ const CreateOrEditPartition = ({ mode = "create", onSubmit }) => {
     description: "",
   });
 
+  const isEdit = mode === "edit";
+
   const handleChange = (e) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit(formData);
   };
+
+  useEffect(() => {
+    if (data) setFormData(data);
+  }, [data?.toString()]);
 
   return (
     <div>
@@ -32,6 +38,7 @@ const CreateOrEditPartition = ({ mode = "create", onSubmit }) => {
       <form onSubmit={handleSubmit} className="max-w-lg mx-auto p-4 w-[500]">
         <InputField
           label="Name"
+          name="name"
           value={formData.name}
           onChange={handleChange}
           maxLength={20}
@@ -39,6 +46,7 @@ const CreateOrEditPartition = ({ mode = "create", onSubmit }) => {
         />
         <InputField
           label="Abbreviation"
+          name="abbreviation"
           value={formData.abbreviation}
           onChange={handleChange}
           maxLength={5}
@@ -46,19 +54,21 @@ const CreateOrEditPartition = ({ mode = "create", onSubmit }) => {
         />
         <InputField
           label="Amount"
+          name="balance"
           type="number"
-          value={formData.amount}
+          value={formData.balance}
           onChange={handleChange}
           required
         />
-        {mode === "edit" && (
+        {isEdit && (
           <InputField
             label="Description (reason for edit)"
+            name="description"
             value={formData.description}
             onChange={handleChange}
           />
         )}
-        <SubmitButton text={mode === "create" ? "Create" : "Edit"} />
+        <SubmitButton text={!isEdit ? "Create" : "Edit"} />
       </form>
     </div>
   );
