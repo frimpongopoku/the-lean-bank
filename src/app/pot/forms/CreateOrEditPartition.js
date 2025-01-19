@@ -50,7 +50,6 @@ const CreateOrEditPartition = ({ onSubmit, mode = "create", data }) => {
           value={formData.abbreviation}
           onChange={handleChange}
           maxLength={5}
-          required
         />
         <InputField
           label="Amount"
@@ -68,7 +67,7 @@ const CreateOrEditPartition = ({ onSubmit, mode = "create", data }) => {
             onChange={handleChange}
           />
         )}
-        <SubmitButton text={!isEdit ? "Create" : "Edit"} />
+        <SubmitButton text={!isEdit ? "Create" : "Save"} />
       </form>
     </div>
   );

@@ -29,8 +29,15 @@ import { useTransactions } from "@/app/hooks/contexts/useTransactions";
 
 function OnePotView({ potId }) {
   const { Modal, openModal, closeModal } = useModal();
-  const { pots, editPot, addPartToPot, updatePartInPot, removePartFromPot } =
-    usePots();
+  const {
+    pots,
+    editPot,
+    addPartToPot,
+    updatePartInPot,
+    removePartFromPot,
+    updatePotWithDeposit,
+    updatePotWithWithdrawal,
+  } = usePots();
 
   const { transactions, addDeposit, addWithdrawal } = useTransactions();
 
@@ -63,17 +70,17 @@ function OnePotView({ potId }) {
 
   const sumOfAllPartitionBalance = useMemo(
     () => parts.reduce((acc, part) => acc + Number(part?.balance), 0),
-    [targetPot]
+    [targetPot, parts, balance]
   );
 
   const createOrEditPartition = (content) => {
     openModal(
       <CreateOrEditPartition
-        mode={content ? "edit" : "create"}
+        mode={content?.id ? "edit" : "create"}
         data={content}
         onSubmit={(formData) => {
           closeModal();
-          if (content) return updatePartInPot(targetPot?.id, content);
+          if (content) return updatePartInPot(targetPot?.id, formData);
           addPartToPot(targetPot?.id, formData);
         }}
       />
@@ -83,14 +90,21 @@ function OnePotView({ potId }) {
   const removePartition = (id) => {
     removePartFromPot(targetPot?.id, id);
   };
-  // -------------------------------------------- Transaction & Borrowing Functions ----------------
+  // -------------------------------------------- Transactions & Borrowing Functions ----------------
 
   const createDeposit = (content, partition) => {
+    // Add transaction
     addDeposit({ ...content, source: partition?.name });
+    // Update partition balance
+    const amount = Number(content?.amount);
+    updatePotWithDeposit(targetPot?.id, partition?.id, amount);
   };
 
   const createWithdrawal = (content, partition) => {
     addWithdrawal({ ...content, source: partition?.name });
+    // Update partition balance
+    const amount = Number(content?.amount);
+    updatePotWithWithdrawal(targetPot?.id, partition?.id, amount);
   };
   // ----------------------------------------------- ---------------- ----------------------------
 
@@ -129,6 +143,12 @@ function OnePotView({ potId }) {
   const onlySumValidity =
     sumOfAllPartitionBalance + freeMoney === Number(balance);
   const checkSumIsValid = onlySumValidity && !freeMoneyIsInvalid;
+  console.log(
+    "freeMoney, balance, sumofAll",
+    freeMoney,
+    balance,
+    sumOfAllPartitionBalance
+  );
 
   const summarizeFreeMoney = () => {
     openModal(

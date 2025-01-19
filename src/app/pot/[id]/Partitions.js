@@ -40,8 +40,15 @@ function Partitions({
       />
     );
   };
-  const spend = () => {
-    openModal(<SpendForm />);
+  const spend = (partition) => {
+    openModal(
+      <SpendForm
+        onSubmit={(content) => {
+          createWithdrawal(content, partition);
+          closeModal();
+        }}
+      />
+    );
   };
   const borrow = () => {
     openModal(<BorrowForm />);
@@ -87,7 +94,7 @@ function Partitions({
       {data?.map((partition, index) => (
         <Card
           deposit={() => deposit(partition)}
-          spend={spend}
+          spend={() => spend(partition)}
           borrow={borrow}
           remove={() => remove(partition.id)}
           key={index}

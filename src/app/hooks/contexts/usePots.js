@@ -93,6 +93,48 @@ export const PotsProvider = ({ children }) => {
     );
   };
 
+  const updatePotWithDeposit = (potId, partId, amount) => {
+    setPots((prevPots) => {
+      return prevPots.map((pot) => {
+        if (pot.id === potId) {
+          const updatedParts = pot.parts.map((part) =>
+            part.id === partId
+              ? { ...part, balance: Number(part.balance) + amount }
+              : part
+          );
+
+          return {
+            ...pot,
+            balance: Number(pot.balance) + amount,
+            parts: updatedParts,
+          };
+        }
+        return pot;
+      });
+    });
+  };
+
+  const updatePotWithWithdrawal = (potId, partId, amount) => {
+    setPots((prevPots) => {
+      return prevPots.map((pot) => {
+        if (pot.id === potId) {
+          const updatedParts = pot.parts.map((part) =>
+            part.id === partId ? { ...part, balance: Number(part.balance) - amount } : part
+          );
+  
+          return {
+            ...pot,
+            balance: Number(pot.balance) - amount,
+            parts: updatedParts,
+          };
+        }
+        return pot;
+      });
+    });
+  };
+  
+
+
   return (
     <PotsContext.Provider
       value={{
@@ -103,6 +145,8 @@ export const PotsProvider = ({ children }) => {
         addPartToPot,
         removePartFromPot,
         updatePartInPot,
+        updatePotWithDeposit,
+        updatePotWithWithdrawal,
       }}
     >
       {children}
