@@ -25,10 +25,9 @@ function Partitions({
   createPartition,
   createDeposit,
   createWithdrawal,
+  doBorrow,
 }) {
   const { Modal, openModal, closeModal } = useModal();
-
-  const { transactions, addDeposit, addWithdrawal } = useTransactions();
 
   const deposit = (partition) => {
     openModal(
@@ -50,8 +49,24 @@ function Partitions({
       />
     );
   };
-  const borrow = () => {
-    openModal(<BorrowForm />);
+  const borrow = (partition) => {
+    openModal(
+      <BorrowForm
+        onSubmit={(content) => {
+          doBorrow(
+            {
+              ...content,
+              source: partition?.name,
+              source_id: partition?.id,
+              paid: false,
+              date: new Date().toLocaleDateString(),
+            },
+            partition
+          );
+          closeModal();
+        }}
+      />
+    );
   };
 
   const remove = (id) => {
@@ -95,7 +110,7 @@ function Partitions({
         <Card
           deposit={() => deposit(partition)}
           spend={() => spend(partition)}
-          borrow={borrow}
+          borrow={() => borrow(partition)}
           remove={() => remove(partition.id)}
           key={index}
           editFxn={() => editPartition(partition)}

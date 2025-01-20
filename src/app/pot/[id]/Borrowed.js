@@ -4,9 +4,19 @@ import TransactionsTable from "./components/TransactionTable"; // Adjust the pat
 import { useModal } from "./components/EBModal";
 import PayUpConfirmation from "./components/PayUpConfirmation";
 
-export default function Transactions() {
+export default function Transactions({ data }) {
   const { Modal, openModal } = useModal();
 
+  // const b = [
+  //   {
+  //     date: "2nd January 2025",
+  //     type: "Deposit",
+  //     amount: 500,
+  //     source: "Savings",
+  //     source_id: "part_savings001",
+  //     description: "New Fibre Installations",
+  //   },
+  // ];
   const payUp = () => {
     openModal(<PayUpConfirmation />);
   };
@@ -20,78 +30,19 @@ export default function Transactions() {
       </button>
     );
   };
-  const transactions = [
-    [
-      { value: "Deposit" },
-      { value: 500 },
-      { value: "2nd January 2025" },
-      { value: "New Fibre Installations" },
+
+  const transformToTableFormat = (b) => {
+    return b.map((txn) => [
+      // { value: txn.id },
+      { value: txn.source },
+      { value: txn.amount },
+      { value: txn.date },
+      { value: txn.description },
       { func: renderPay },
-    ],
-    [
-      { value: "Spend" },
-      { value: 500 },
-      { value: "2nd January 2025" },
-      { value: "New Fibre Installations" },
-      { func: renderPay },
-    ],
-    [
-      { value: "Deposit" },
-      { value: 500 },
-      { value: "2nd January 2025" },
-      { value: "New Fibre Installations" },
-      { func: renderPay },
-    ],
-    [
-      { value: "Spend" },
-      { value: 500 },
-      { value: "2nd January 2025" },
-      { value: "New Fibre Installations" },
-      { func: renderPay },
-    ],
-    [
-      { value: "Spend" },
-      { value: 500 },
-      { value: "2nd January 2025" },
-      { value: "New Fibre Installations" },
-      { func: renderPay },
-    ],
-    [
-      { value: "LTF" },
-      { value: 500 },
-      { value: "2nd January 2025" },
-      { value: "New Fibre Installations" },
-      { func: renderPay },
-    ],
-    [
-      { value: "LTF" },
-      { value: 500 },
-      { value: "2nd January 2025" },
-      { value: "New Fibre Installations" },
-      { func: renderPay },
-    ],
-    [
-      { value: "LTF" },
-      { value: 500 },
-      { value: "2nd January 2025" },
-      { value: "New Fibre Installations" },
-      { func: renderPay },
-    ],
-    [
-      { value: "LTF" },
-      { value: 500 },
-      { value: "2nd January 2025" },
-      { value: "New Fibre Installations" },
-      { func: renderPay },
-    ],
-    [
-      { value: "LTF" },
-      { value: 500 },
-      { value: "2nd January 2025" },
-      { value: "New Fibre Installations" },
-      { func: renderPay },
-    ],
-  ];
+    ]);
+  };
+  const borrows = transformToTableFormat(data);
+  
 
   const tableHeadings = [
     "Wallet Source",
@@ -128,7 +79,7 @@ export default function Transactions() {
 
       <div className=" shadow-xl bg-white rounded-lg p-4">
         <TransactionsTable
-          data={transactions}
+          data={borrows}
           head={tableHeadings}
           cColor="bg-orange-50"
         />

@@ -1,11 +1,13 @@
 "use client";
 import { createContext, useContext, useReducer } from "react";
 
-const generateTransactionId = () => {
+const generateTransactionId = (pre = "txn_") => {
   const timestamp = Date.now().toString(36); // Convert current timestamp to base 36
   const randomStr = Math.random().toString(36).substring(2, 8); // Generate random alphanumeric string
-  return `txn_${timestamp}_${randomStr}`;
+  return `${pre}${timestamp}_${randomStr}`;
 };
+
+export const generateUniqueId = generateTransactionId;
 
 // Define initial transactions state
 const initialTransactions = [

@@ -25,7 +25,11 @@ import { usePots } from "@/app/hooks/contexts/usePots";
 import Fallback from "@/app/components/Fallback";
 import FreeMoneySummary from "./components/FreeMoneySummary";
 import ChecksumSummary from "./components/ChecksumSummary";
-import { useTransactions } from "@/app/hooks/contexts/useTransactions";
+import {
+  generateUniqueId,
+  useTransactions,
+} from "@/app/hooks/contexts/useTransactions";
+import { useBorrow } from "@/app/hooks/contexts/useBorrow";
 
 function OnePotView({ potId }) {
   const { Modal, openModal, closeModal } = useModal();
@@ -40,6 +44,8 @@ function OnePotView({ potId }) {
   } = usePots();
 
   const { transactions, addDeposit, addWithdrawal } = useTransactions();
+
+  const { borrows, addBorrow, markAsPaid } = useBorrow();
 
   const targetPot = pots.find((pot) => pot.id?.toString() === potId);
 
@@ -106,6 +112,10 @@ function OnePotView({ potId }) {
     const amount = Number(content?.amount);
     updatePotWithWithdrawal(targetPot?.id, partition?.id, amount);
   };
+
+  const doBorrow = (content, partition) => {
+    addBorrow({ ...content, id: generateUniqueId("bor_") });
+  };
   // ----------------------------------------------- ---------------- ----------------------------
 
   const tabs = [
@@ -122,6 +132,7 @@ function OnePotView({ potId }) {
           onRemove={removePartition}
           createDeposit={createDeposit}
           createWithdrawal={createWithdrawal}
+          doBorrow={doBorrow}
         />
       ),
     },
@@ -133,7 +144,7 @@ function OnePotView({ potId }) {
     {
       label: "Borrowed",
       icon: faMoneyBillTransfer,
-      content: <Borrowed />,
+      content: <Borrowed data={borrows} />,
     },
   ];
   // --------------------------------------------
