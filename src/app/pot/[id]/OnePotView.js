@@ -173,12 +173,6 @@ function OnePotView({ potId }) {
   const onlySumValidity =
     sumOfAllPartitionBalance + freeMoney === Number(balance);
   const checkSumIsValid = onlySumValidity && !freeMoneyIsInvalid;
-  console.log(
-    "freeMoney, balance, sumofAll",
-    freeMoney,
-    balance,
-    sumOfAllPartitionBalance
-  );
 
   const summarizeFreeMoney = () => {
     openModal(
@@ -197,7 +191,7 @@ function OnePotView({ potId }) {
       />
     );
   };
-  // --------------------------------------------
+  // --------------------------------------------------------------
 
   return (
     <CenteredWrapper>

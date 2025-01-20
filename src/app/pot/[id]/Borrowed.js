@@ -28,7 +28,6 @@ export default function Transactions({ data, payUpIntoSource }) {
           closeModal();
           if (!depositBackIntoSource) return;
           payUpIntoSource(data?.source_id, data?.amount);
-         
         }}
         onClose={() => closeModal()}
       />
@@ -73,7 +72,7 @@ export default function Transactions({ data, payUpIntoSource }) {
       <Modal />
       <h1 className="text-2xl font-bold mb-4">Borrows</h1>
 
-      <div className="flex gap-4 mb-6">
+      {/* <div className="flex gap-4 mb-6">
         <select className="border p-2 rounded">
           <option>LTF</option>
         </select>
@@ -82,15 +81,15 @@ export default function Transactions({ data, payUpIntoSource }) {
         <button className="bg-black text-white px-4 py-2 rounded flex items-center gap-2">
           <FontAwesomeIcon icon={faSearch} /> Search
         </button>
-      </div>
+      </div> */}
 
       <div className="flex gap-4 mb-4">
         <a href="#" className="text-green-600 font-bold">
           <FontAwesomeIcon icon={faDownload} /> Download
         </a>
-        <a href="#" className="text-green-600 font-bold">
+        {/* <a href="#" className="text-green-600 font-bold">
           Show All
-        </a>
+        </a> */}
       </div>
 
       <div className=" shadow-xl bg-white rounded-lg p-4">
