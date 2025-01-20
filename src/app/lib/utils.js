@@ -1,3 +1,4 @@
+import jsPDF from "jspdf";
 export const generatePDF = (
   cssSelector = ".printable-area",
   filename = "lean-bank-generated-pdf"

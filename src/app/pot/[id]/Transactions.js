@@ -2,7 +2,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDownload, faSearch } from "@fortawesome/free-solid-svg-icons";
 import TransactionsTable from "./components/TransactionTable"; // Adjust the path as needed
 import Loading from "@/app/components/Loading";
-import jsPDF from "jspdf";
+
 import "jspdf-autotable";
 import { generatePDF } from "@/app/lib/utils";
 import { TRANSACTIONS } from "@/app/seed/transaction-seed";

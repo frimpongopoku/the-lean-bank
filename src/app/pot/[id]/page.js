@@ -3,6 +3,7 @@ import React from "react";
 import OnePotView from "./OnePotView";
 import { TransactionProvider } from "@/app/hooks/contexts/useTransactions";
 import { BorrowProvider } from "@/app/hooks/contexts/useBorrow";
+import { AuthProvider } from "@/app/auth/context/AuthContext";
 
 async function PotView({ params }) {
   const { id } = params;
@@ -10,7 +11,9 @@ async function PotView({ params }) {
     <PotsProvider>
       <TransactionProvider>
         <BorrowProvider>
-          <OnePotView potId={id} />
+          <AuthProvider>
+            <OnePotView potId={id} />
+          </AuthProvider>
         </BorrowProvider>
       </TransactionProvider>
     </PotsProvider>

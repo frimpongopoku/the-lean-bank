@@ -30,6 +30,7 @@ import {
   useTransactions,
 } from "@/app/hooks/contexts/useTransactions";
 import { useBorrow } from "@/app/hooks/contexts/useBorrow";
+import AuthGuard from "@/app/auth/AuthGuard";
 
 function OnePotView({ potId }) {
   const { Modal, openModal, closeModal } = useModal();
@@ -194,80 +195,85 @@ function OnePotView({ potId }) {
   // --------------------------------------------------------------
 
   return (
-    <CenteredWrapper>
-      <Modal />
-      <div className="w-full max-w-4xl p-4 md:p-8">
-        {/* Header */}
-        <div className="text-xl md:text-2xl font-bold mb-6 flex flex-col   ">
-          <p className="text-gray-800 text-5xl mb-2 flex flex-row items-center">
-            <FontAwesomeIcon
-              onClick={() => router.back()}
-              icon={faLongArrowAltLeft}
-              className="text-4xl mr-4 text-gray-600 hover:text-green-500 cursor-pointer"
-            />
-            {name || "..."}
-          </p>
-          <div className="my-4 bg-white border-green-600 flex flex-row items-center justify-between  shadow-md rounded-md mx-2 p-5">
-            <div className="flex flex-row items-center">
-              <p className="text-green-700 flex flex-col ml-2 text-3xl mr-2">
-                <span className="flex flex-row items-center">
-                  {Number(balance)?.toLocaleString()}
-                  <FontAwesomeIcon
-                    onClick={editPotContent}
-                    icon={faEdit}
-                    className="ml-2 text-2xl text-green-700 hover:text-green-600 cursor-pointer"
-                  />
-                </span>
+    <AuthGuard signout>
+      <CenteredWrapper>
+        <Modal />
+        <div className="w-full max-w-4xl p-4 md:p-8">
+          {/* Header */}
+          <div className="text-xl md:text-2xl font-bold mb-6 flex flex-col   ">
+            <p className="text-gray-800 text-5xl mb-2 flex flex-row items-center">
+              <FontAwesomeIcon
+                onClick={() => router.back()}
+                icon={faLongArrowAltLeft}
+                className="text-4xl mr-4 text-gray-600 hover:text-green-500 cursor-pointer"
+              />
+              {name || "..."}
+            </p>
+            <div className="my-4 bg-white border-green-600 flex flex-row items-center justify-between  shadow-md rounded-md mx-2 p-5">
+              <div className="flex flex-row items-center">
+                <p className="text-green-700 flex flex-col ml-2 text-3xl mr-2">
+                  <span className="flex flex-row items-center">
+                    {Number(balance)?.toLocaleString()}
+                    <FontAwesomeIcon
+                      onClick={editPotContent}
+                      icon={faEdit}
+                      className="ml-2 text-2xl text-green-700 hover:text-green-600 cursor-pointer"
+                    />
+                  </span>
 
-                <span className="text-sm">Actual Account Value</span>
-              </p>
-            </div>
-            <div className="flex flex-row items-center mx-6">
-              <p
-                className={`${
-                  freeMoneyIsInvalid ? "text-red-500" : "text-cyan-600"
-                } flex flex-col ml-2 text-3xl mr-2  cursor-pointer`}
-              >
-                <span className="hover:underline" onClick={summarizeFreeMoney}>
-                  {freeMoney?.toLocaleString()}
-                </span>
+                  <span className="text-sm">Actual Account Value</span>
+                </p>
+              </div>
+              <div className="flex flex-row items-center mx-6">
+                <p
+                  className={`${
+                    freeMoneyIsInvalid ? "text-red-500" : "text-cyan-600"
+                  } flex flex-col ml-2 text-3xl mr-2  cursor-pointer`}
+                >
+                  <span
+                    className="hover:underline"
+                    onClick={summarizeFreeMoney}
+                  >
+                    {freeMoney?.toLocaleString()}
+                  </span>
 
-                <span className="text-sm">
-                  {freeMoneyIsInvalid
-                    ? "You are owing!"
-                    : "Unassigned (A.k.a Free Money)"}
-                </span>
-              </p>
-            </div>
-            <div className="flex flex-row items-center  mx-6">
-              <p
-                className={`${
-                  checkSumIsValid ? "text-green-500" : "text-red-500"
-                } flex flex-col ml-2 text-3xl mr-2   cursor-pointer`}
-              >
-                <span className="hover:underline" onClick={summarizeChecksum}>
-                  {checkSumIsValid ? "Valid" : "Invalid"}
-                </span>
+                  <span className="text-sm">
+                    {freeMoneyIsInvalid
+                      ? "You are owing!"
+                      : "Unassigned (A.k.a Free Money)"}
+                  </span>
+                </p>
+              </div>
+              <div className="flex flex-row items-center  mx-6">
+                <p
+                  className={`${
+                    checkSumIsValid ? "text-green-500" : "text-red-500"
+                  } flex flex-col ml-2 text-3xl mr-2   cursor-pointer`}
+                >
+                  <span className="hover:underline" onClick={summarizeChecksum}>
+                    {checkSumIsValid ? "Valid" : "Invalid"}
+                  </span>
 
-                <span className="text-sm">Checksum</span>
-              </p>
+                  <span className="text-sm">Checksum</span>
+                </p>
+              </div>
             </div>
+
+            {/* Add Partition */}
+            <button
+              onClick={() => createOrEditPartition()}
+              className="mt-4 md:mt-0 inline-flex hover:text-green-600 hover:underline  items-center text-lg text-green-700"
+            >
+              <FontAwesomeIcon icon={faPlus} className="mr-2 h-5 w-5" />
+              Add Partition
+            </button>
           </div>
 
-          {/* Add Partition */}
-          <button
-            onClick={() => createOrEditPartition()}
-            className="mt-4 md:mt-0 inline-flex hover:text-green-600 hover:underline  items-center text-lg text-green-700"
-          >
-            <FontAwesomeIcon icon={faPlus} className="mr-2 h-5 w-5" />
-            Add Partition
-          </button>
+          {/* Tabs */}
+          <TabViewer tabs={tabs} />
         </div>
-
-        {/* Tabs */}
-        <TabViewer tabs={tabs} />
-      </div>
-    </CenteredWrapper>
+      </CenteredWrapper>
+    </AuthGuard>
   );
 }
 
