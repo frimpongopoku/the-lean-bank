@@ -20,11 +20,12 @@ import { useModal } from "./components/EBModal";
 import Loading from "@/app/components/Loading";
 import CreateOrEditPartition from "../forms/CreateOrEditPartition";
 import CreateOrEditPotForm from "@/app/home/CreateOrEditPotForm";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { usePots } from "@/app/hooks/contexts/usePots";
 import Fallback from "@/app/components/Fallback";
 import FreeMoneySummary from "./components/FreeMoneySummary";
 import ChecksumSummary from "./components/ChecksumSummary";
+
 import {
   generateUniqueId,
   useTransactions,
@@ -34,6 +35,7 @@ import AuthGuard from "@/app/auth/AuthGuard";
 
 function OnePotView({ potId }) {
   const { Modal, openModal, closeModal } = useModal();
+  const router = useRouter();
   const {
     pots,
     editPot,
