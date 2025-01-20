@@ -86,8 +86,13 @@ function OnePotView({ potId }) {
         data={content}
         onSubmit={(formData) => {
           closeModal();
-          if (content) return updatePartInPot(targetPot?.id, formData);
-          addPartToPot(targetPot?.id, formData);
+          if (content)
+            return updatePartInPot(targetPot?.id, { ...content, ...formData });
+          addPartToPot(targetPot?.id, {
+            ...formData,
+            id: generateUniqueId(),
+            date: new Date().toLocaleString(),
+          });
         }}
       />
     );

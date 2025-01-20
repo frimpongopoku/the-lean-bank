@@ -20,9 +20,9 @@ export const POTS = [
     id: 2,
     currency: "USD",
     parts: [
-      { name: "Savings", balance: 10456, id: 1, currency: "USD" },
-      { name: "Investment", balance: 102456, id: 2, currency: "USD" },
-      { name: "Emergency", balance: 9456, id: 3, currency: "USD" },
+      // { name: "Savings", balance: 10456, id: 1, currency: "USD" },
+      // { name: "Investment", balance: 102456, id: 2, currency: "USD" },
+      // { name: "Emergency", balance: 9456, id: 3, currency: "USD" },
     ],
   },
   // Add more pots here...

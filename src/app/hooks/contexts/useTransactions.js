@@ -76,7 +76,7 @@ const TransactionContext = createContext();
 export const TransactionProvider = ({ children }) => {
   const [transactions, dispatch] = useReducer(
     transactionReducer,
-    initialTransactions
+    []
   );
 
   // Actions
