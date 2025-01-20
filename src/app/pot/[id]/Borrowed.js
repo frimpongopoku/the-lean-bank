@@ -5,7 +5,7 @@ import { useModal } from "./components/EBModal";
 import PayUpConfirmation from "./components/PayUpConfirmation";
 import { useBorrow } from "@/app/hooks/contexts/useBorrow";
 
-export default function Transactions({ data }) {
+export default function Transactions({ data, payUpIntoSource }) {
   const { Modal, openModal, closeModal } = useModal();
   const { borrow, markAsPaid } = useBorrow();
 
@@ -24,9 +24,11 @@ export default function Transactions({ data }) {
       <PayUpConfirmation
         onConfirm={(content) => {
           const depositBackIntoSource = content === "source_wallet";
-          console.log("Final Results", content);
           markAsPaid(data?.id);
           closeModal();
+          if (!depositBackIntoSource) return;
+          payUpIntoSource(data?.source_id, data?.amount);
+         
         }}
         onClose={() => closeModal()}
       />
@@ -34,7 +36,8 @@ export default function Transactions({ data }) {
   };
 
   const renderPay = (data) => {
-    if (data?.paid) return <span className="text-green-700 font-semibold">Paid</span>;
+    if (data?.paid)
+      return <span className="text-green-700 font-semibold">Paid</span>;
     return (
       <button
         onClick={() => payUp(data)}

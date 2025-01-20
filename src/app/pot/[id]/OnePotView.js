@@ -123,6 +123,13 @@ function OnePotView({ potId }) {
       partition
     );
   };
+
+  const payUpIntoSource = (partId, amount) => {
+    // Update partition balance
+    const partition = parts.find((part) => part.id === partId);
+    createDeposit({ description: `Paid Up, after borrow!`, amount }, partition);
+  };
+
   // -------------------------------------------------------------------------------------------
 
   const tabs = [
@@ -151,7 +158,7 @@ function OnePotView({ potId }) {
     {
       label: "Borrowed",
       icon: faMoneyBillTransfer,
-      content: <Borrowed data={borrows} />,
+      content: <Borrowed data={borrows} payUpIntoSource={payUpIntoSource} />,
     },
   ];
   // --------------------------------------------
