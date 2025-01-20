@@ -3,9 +3,11 @@ import { faDownload, faSearch } from "@fortawesome/free-solid-svg-icons";
 import TransactionsTable from "./components/TransactionTable"; // Adjust the path as needed
 import { useModal } from "./components/EBModal";
 import PayUpConfirmation from "./components/PayUpConfirmation";
+import { useBorrow } from "@/app/hooks/contexts/useBorrow";
 
 export default function Transactions({ data }) {
-  const { Modal, openModal } = useModal();
+  const { Modal, openModal, closeModal } = useModal();
+  const { borrow, markAsPaid } = useBorrow();
 
   // const b = [
   //   {
@@ -17,13 +19,25 @@ export default function Transactions({ data }) {
   //     description: "New Fibre Installations",
   //   },
   // ];
-  const payUp = () => {
-    openModal(<PayUpConfirmation />);
+  const payUp = (data) => {
+    openModal(
+      <PayUpConfirmation
+        onConfirm={(content) => {
+          const depositBackIntoSource = content === "source_wallet";
+          console.log("Final Results", content);
+          markAsPaid(data?.id);
+          closeModal();
+        }}
+        onClose={() => closeModal()}
+      />
+    );
   };
+
   const renderPay = (data) => {
+    if (data?.paid) return <span className="text-green-700 font-semibold">Paid</span>;
     return (
       <button
-        onClick={payUp}
+        onClick={() => payUp(data)}
         className="bg-green-500 text-white font-bold text-sm px-3 py-1 rounded"
       >
         Pay
@@ -38,11 +52,10 @@ export default function Transactions({ data }) {
       { value: txn.amount },
       { value: txn.date },
       { value: txn.description },
-      { func: renderPay },
+      { func: () => renderPay(txn) },
     ]);
   };
   const borrows = transformToTableFormat(data);
-  
 
   const tableHeadings = [
     "Wallet Source",
@@ -55,7 +68,7 @@ export default function Transactions({ data }) {
   return (
     <div className="py-8">
       <Modal />
-      <h1 className="text-2xl font-bold mb-4">Transactions</h1>
+      <h1 className="text-2xl font-bold mb-4">Borrows</h1>
 
       <div className="flex gap-4 mb-6">
         <select className="border p-2 rounded">

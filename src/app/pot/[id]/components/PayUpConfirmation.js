@@ -32,7 +32,7 @@ const PayUpConfirmation = ({ onClose, onConfirm }) => {
             />
             <span className="text-gray-700">Pay back to the source wallet</span>
           </label>
-          <label className="flex items-center space-x-2">
+          {/* <label className="flex items-center space-x-2">
             <input
               type="radio"
               value="main_account"
@@ -41,7 +41,7 @@ const PayUpConfirmation = ({ onClose, onConfirm }) => {
               className="form-radio text-blue-600"
             />
             <span className="text-gray-700">Pay back to main account</span>
-          </label>
+          </label> */}
           <label className="flex items-center space-x-2">
             <input
               type="radio"

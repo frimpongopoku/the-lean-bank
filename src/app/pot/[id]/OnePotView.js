@@ -115,8 +115,15 @@ function OnePotView({ potId }) {
 
   const doBorrow = (content, partition) => {
     addBorrow({ ...content, id: generateUniqueId("bor_") });
+    // Update partition balance
+    const amount = Number(content?.amount);
+    // updatePotWithWithdrawal(targetPot?.id, partition?.id, amount);
+    createWithdrawal(
+      { description: `Borrowed: ${content?.description}`, amount },
+      partition
+    );
   };
-  // ----------------------------------------------- ---------------- ----------------------------
+  // -------------------------------------------------------------------------------------------
 
   const tabs = [
     {
