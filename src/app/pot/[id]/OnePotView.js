@@ -203,7 +203,7 @@ function OnePotView({ potId }) {
           <div className="text-xl md:text-2xl font-bold mb-6 flex flex-col   ">
             <p className="text-gray-800 text-5xl mb-2 flex flex-row items-center">
               <FontAwesomeIcon
-                onClick={() => router.back()}
+                onClick={() => router.push("/home")}
                 icon={faLongArrowAltLeft}
                 className="text-4xl mr-4 text-gray-600 hover:text-green-500 cursor-pointer"
               />
