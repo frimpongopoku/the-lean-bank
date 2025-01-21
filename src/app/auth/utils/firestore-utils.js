@@ -153,3 +153,20 @@ export async function updatePotsInFirestore(collectionId, potData) {
     console.error("Error updating pots in Firestore:", error);
   }
 }
+
+/**
+ * Update the BORROWS document within the user's collection
+ * @param {string} userId - The authenticated user's ID
+ * @param {object} borrowsData - The new BORROWS data to update
+ */
+export const updateBorrowsInFirestore = async (userId, borrowsData) => {
+  try {
+    const borrowsRef = doc(db, userId, BORROWED);
+    // await setDoc(borrowsRef, borrowsData, { merge: true });
+    await setDoc(borrowsRef, borrowsData);
+    console.log("BORROWS updated successfully.");
+  } catch (error) {
+    console.error("Error updating BORROWS:", error);
+    throw new Error("Failed to update BORROWS.");
+  }
+};

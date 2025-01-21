@@ -1,35 +1,55 @@
 "use client";
-import { createContext, useContext, useState } from "react";
+import { updateBorrowsInFirestore } from "@/app/auth/utils/firestore-utils";
+import { createContext, useContext, useEffect, useState } from "react";
 
 const BorrowContext = createContext();
 
 export const BorrowProvider = ({ children }) => {
-  const [borrows, setBorrows] = useState([]);
+  const [borrowState, setBorrowState] = useState({
+    key: "",
+    borrows: [],
+  });
+
+  useEffect(() => {
+    if (borrowState?.borrows?.length > 0) {
+      updateBorrowsInFirestore(borrowState?.key, borrowState);
+    }
+  }, [JSON.stringify(borrowState)]);
+
+  // Set the entire borrow state
+  const setBorrows = (newBorrowState) => {
+    setBorrowState(newBorrowState);
+  };
 
   // Add a new borrow record
   const addBorrow = (newBorrow) => {
-    setBorrows((prevBorrows) => [...prevBorrows, newBorrow]);
+    setBorrowState((prevState) => ({
+      ...prevState,
+      borrows: [...(prevState?.borrows || []), newBorrow],
+    }));
   };
 
   // Update an existing borrow item by ID
   const updateBorrow = (id, updatedData) => {
-    setBorrows((prevBorrows) =>
-      prevBorrows.map((borrow) =>
+    setBorrowState((prevState) => ({
+      ...prevState,
+      borrows: prevState.borrows.map((borrow) =>
         borrow.id === id ? { ...borrow, ...updatedData } : borrow
-      )
-    );
+      ),
+    }));
   };
 
   // Delete a borrow record by ID
   const deleteBorrow = (id) => {
-    setBorrows((prevBorrows) =>
-      prevBorrows.filter((borrow) => borrow.id !== id)
-    );
+    setBorrowState((prevState) => ({
+      ...prevState,
+      borrows: prevState.borrows.filter((borrow) => borrow.id !== id),
+    }));
   };
 
   // Get a specific borrow item by ID
   const getBorrowById = (id) => {
-    return borrows.find((borrow) => borrow.id === id);
+    return borrowState.borrows.find((borrow) => borrow.id === id);
   };
 
   // Mark a borrow item as paid
@@ -40,7 +60,9 @@ export const BorrowProvider = ({ children }) => {
   return (
     <BorrowContext.Provider
       value={{
-        borrows,
+        key: borrowState.key,
+        borrows: borrowState.borrows,
+        setBorrows,
         addBorrow,
         updateBorrow,
         deleteBorrow,

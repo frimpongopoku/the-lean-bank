@@ -4,6 +4,7 @@ import TransactionsTable from "./components/TransactionTable"; // Adjust the pat
 import { useModal } from "./components/EBModal";
 import PayUpConfirmation from "./components/PayUpConfirmation";
 import { useBorrow } from "@/app/hooks/contexts/useBorrow";
+import { formatDateTime } from "@/app/lib/utils";
 
 export default function Transactions({ data, payUpIntoSource }) {
   const { Modal, openModal, closeModal } = useModal();
@@ -52,7 +53,7 @@ export default function Transactions({ data, payUpIntoSource }) {
       // { value: txn.id },
       { value: txn.source },
       { value: txn.amount },
-      { value: txn.date?.toLocaleString() },
+      { value: formatDateTime(txn.date) },
       { value: txn.description },
       { func: () => renderPay(txn) },
     ]);

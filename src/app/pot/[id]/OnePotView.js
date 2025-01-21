@@ -57,7 +57,7 @@ function OnePotView({ potId, userId }) {
   const { transactions, addDeposit, addWithdrawal, setTransactions } =
     useTransactions();
 
-  const { borrows, addBorrow } = useBorrow();
+  const { borrows, addBorrow, setBorrows } = useBorrow();
 
   const pots = potData?.pots || [];
   const targetPot = pots.find((pot) => pot.id?.toString() === potId);
@@ -81,9 +81,8 @@ function OnePotView({ potId, userId }) {
 
       const { TRANSACTIONS, POTS, BORROWED } = data;
       setPotData(POTS);
-
-      console.log("TRANSACCTIONS DATA", TRANSACTIONS);
       setTransactions(TRANSACTIONS);
+      setBorrows(BORROWED);
     });
   }, [userId]);
 
