@@ -52,7 +52,7 @@ export default function Transactions({ data, payUpIntoSource }) {
       // { value: txn.id },
       { value: txn.source },
       { value: txn.amount },
-      { value: txn.date },
+      { value: txn.date?.toLocaleString() },
       { value: txn.description },
       { func: () => renderPay(txn) },
     ]);

@@ -11,7 +11,7 @@ export default function Transactions({ data }) {
   const transformToTableFormat = (transactions) => {
     return transactions.map((txn) => [
       // { value: txn.id },
-      { value: txn.date },
+      { value: txn.date?.toLocaleString() },
       { value: txn.type },
       { value: txn.amount },
       { value: txn.source },

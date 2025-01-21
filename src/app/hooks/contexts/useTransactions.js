@@ -42,7 +42,7 @@ const transactionReducer = (state, action) => {
     case "ADD_DEPOSIT":
       return [
         {
-          id: generateTransactionId(),
+          id: generateTransactionId("dep_"),
           date: action.payload.date || makeDate(),
           type: "Deposit",
           amount: action.payload.amount,
@@ -55,7 +55,7 @@ const transactionReducer = (state, action) => {
     case "ADD_WITHDRAWAL":
       return [
         {
-          id: generateTransactionId(),
+          id: generateTransactionId("wit_"),
           date: action.payload.date || makeDate(),
           type: "Withdrawal",
           amount: action.payload.amount,

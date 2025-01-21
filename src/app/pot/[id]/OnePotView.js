@@ -80,7 +80,7 @@ function OnePotView({ potId, userId }) {
     });
     getUserCollection(userId).then((data) => {
       if (!data) return setNotFound(true);
-      console.log("This is the data", data);
+
       const { TRANSACTIONS, POTS, BORROWED } = data;
       setPotData(POTS);
     });
@@ -92,8 +92,6 @@ function OnePotView({ potId, userId }) {
     () => parts?.reduce((acc, part) => acc + Number(part?.balance), 0) || 0,
     [targetPot, parts, balance]
   );
-
-  console.log("SUM OF ALL, balance", sumOfAllPartitionBalance, balance);
 
   //  ------------------- 0. Loading -------------------
   if (potData?.key === UNDEFINED) return <Loading full />;
@@ -127,14 +125,20 @@ function OnePotView({ potId, userId }) {
 
   const createDeposit = (content, partition) => {
     // Add transaction
-    addDeposit({ ...content, source: partition?.name });
+    addDeposit({
+      ...content,
+      source: partition?.name,
+    });
     // Update partition balance
     const amount = Number(content?.amount);
     updatePotWithDeposit(targetPot?.id, partition?.id, amount);
   };
 
   const createWithdrawal = (content, partition) => {
-    addWithdrawal({ ...content, source: partition?.name });
+    addWithdrawal({
+      ...content,
+      source: partition?.name,
+    });
     // Update partition balance
     const amount = Number(content?.amount);
     updatePotWithWithdrawal(targetPot?.id, partition?.id, amount);
@@ -159,6 +163,7 @@ function OnePotView({ potId, userId }) {
 
   // -------------------------------------------------------------------------------------------
 
+  console.log("WHATS TRANSACTIONS", transactions);
   const tabs = [
     {
       label: "Partitions",

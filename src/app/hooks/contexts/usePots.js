@@ -85,7 +85,7 @@ export const PotsProvider = ({ children }) => {
         if (pot.id === potId) {
           return {
             ...pot,
-            parts: [...pot.parts, newPart],
+            parts: [...(pot?.parts || []), newPart],
           };
         }
         return pot;
@@ -148,6 +148,7 @@ export const PotsProvider = ({ children }) => {
   };
 
   const updatePotWithWithdrawal = (potId, partId, amount) => {
+    console.log("I was in here");
     setPotData((prevPotData) => ({
       ...prevPotData,
       pots: prevPotData.pots.map((pot) => {
@@ -164,6 +165,7 @@ export const PotsProvider = ({ children }) => {
             parts: updatedParts,
           };
         }
+        console.log("Lets see POT", pot);
         return pot;
       }),
     }));
