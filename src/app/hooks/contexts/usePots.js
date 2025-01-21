@@ -2,7 +2,13 @@
 
 import { UNDEFINED } from "@/app/auth/context/AuthContext";
 import { updatePotsInFirestore } from "@/app/auth/utils/firestore-utils";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 // export const POTS = [
 //   {
@@ -34,15 +40,20 @@ const PotsContext = createContext();
 
 export const PotsProvider = ({ children }) => {
   const [potData, setPotData] = useState({ key: UNDEFINED, pots: null });
+  const firstRender = useRef(true);
   // const searchParams = useSearchParams();
   // const collectionId = searchParams.get("c"); // Get collection ID from URL
 
   // Sync potData to Firestore whenever it changes
   useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
     if (potData?.pots?.length > 0) {
       updatePotsInFirestore(potData?.key, potData);
     }
-  }, [potData?.pots]);
+  }, [JSON.stringify(potData)]);
 
   const addPot = (newPot) => {
     setPotData((prevPotData) => ({

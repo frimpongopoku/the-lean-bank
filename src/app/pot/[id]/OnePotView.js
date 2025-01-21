@@ -34,7 +34,10 @@ import { useBorrow } from "@/app/hooks/contexts/useBorrow";
 import AuthGuard from "@/app/auth/AuthGuard";
 import { makeDate } from "@/app/lib/utils";
 import { UNDEFINED, useAuth } from "@/app/auth/context/AuthContext";
-import { getAllPots } from "@/app/auth/utils/firestore-utils";
+import {
+  getAllPots,
+  getUserCollection,
+} from "@/app/auth/utils/firestore-utils";
 
 function OnePotView({ potId, userId }) {
   const { Modal, openModal, closeModal } = useModal();
@@ -72,10 +75,14 @@ function OnePotView({ potId, userId }) {
   };
 
   useEffect(() => {
-    getAllPots(userId).then((data) => {
+    getUserCollection(userId).then((response) => {
+      console.log("EVERYTHING", response);
+    });
+    getUserCollection(userId).then((data) => {
+      if (!data) return setNotFound(true);
       console.log("This is the data", data);
-      setPotData(data);
-      if (!data) setNotFound(true);
+      const { TRANSACTIONS, POTS, BORROWED } = data;
+      setPotData(POTS);
     });
   }, [userId]);
 
