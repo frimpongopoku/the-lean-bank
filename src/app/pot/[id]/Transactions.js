@@ -4,14 +4,14 @@ import TransactionsTable from "./components/TransactionTable"; // Adjust the pat
 import Loading from "@/app/components/Loading";
 
 import "jspdf-autotable";
-import { generatePDF } from "@/app/lib/utils";
+import { formatDateTime, generatePDF } from "@/app/lib/utils";
 import { TRANSACTIONS } from "@/app/seed/transaction-seed";
 
 export default function Transactions({ data }) {
   const transformToTableFormat = (transactions) => {
-    return transactions.map((txn) => [
+    return transactions?.map((txn) => [
       // { value: txn.id },
-      { value: txn.date?.toLocaleString() },
+      { value: formatDateTime(txn.date) },
       { value: txn.type },
       { value: txn.amount },
       { value: txn.source },

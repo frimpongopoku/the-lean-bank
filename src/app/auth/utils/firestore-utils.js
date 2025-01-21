@@ -83,10 +83,14 @@ export const updatePots = async (userId, potsData) => {
  * @param {string} userId - The authenticated user's ID
  * @param {object} transactionsData - The new TRANSACTIONS data to update
  */
-export const updateTransactions = async (userId, transactionsData) => {
+export const updateTransactionsInFirestore = async (
+  userId,
+  transactionsData
+) => {
   try {
     const transactionsRef = doc(db, userId, TRANSACTIONS);
-    await setDoc(transactionsRef, transactionsData, { merge: true });
+    // await setDoc(transactionsRef, transactionsData, { merge: true });
+    await setDoc(transactionsRef, transactionsData);
     console.log("TRANSACTIONS updated successfully.");
   } catch (error) {
     console.error("Error updating TRANSACTIONS:", error);

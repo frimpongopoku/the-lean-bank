@@ -54,7 +54,8 @@ function OnePotView({ potId, userId }) {
     updatePotWithWithdrawal,
   } = usePots();
 
-  const { transactions, addDeposit, addWithdrawal } = useTransactions();
+  const { transactions, addDeposit, addWithdrawal, setTransactions } =
+    useTransactions();
 
   const { borrows, addBorrow } = useBorrow();
 
@@ -75,14 +76,14 @@ function OnePotView({ potId, userId }) {
   };
 
   useEffect(() => {
-    getUserCollection(userId).then((response) => {
-      console.log("EVERYTHING", response);
-    });
     getUserCollection(userId).then((data) => {
       if (!data) return setNotFound(true);
 
       const { TRANSACTIONS, POTS, BORROWED } = data;
       setPotData(POTS);
+
+      console.log("TRANSACCTIONS DATA", TRANSACTIONS);
+      setTransactions(TRANSACTIONS);
     });
   }, [userId]);
 
@@ -185,12 +186,14 @@ function OnePotView({ potId, userId }) {
     {
       label: "Transactions",
       icon: faBook,
-      content: <Transactions data={transactions} />,
+      content: <Transactions data={transactions || []} />,
     },
     {
       label: "Borrowed",
       icon: faMoneyBillTransfer,
-      content: <Borrowed data={borrows} payUpIntoSource={payUpIntoSource} />,
+      content: (
+        <Borrowed data={borrows || []} payUpIntoSource={payUpIntoSource} />
+      ),
     },
   ];
   // --------------------------------------------

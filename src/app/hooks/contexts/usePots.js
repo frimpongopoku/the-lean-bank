@@ -148,7 +148,6 @@ export const PotsProvider = ({ children }) => {
   };
 
   const updatePotWithWithdrawal = (potId, partId, amount) => {
-    console.log("I was in here");
     setPotData((prevPotData) => ({
       ...prevPotData,
       pots: prevPotData.pots.map((pot) => {
