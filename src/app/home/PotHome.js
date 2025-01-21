@@ -7,17 +7,18 @@ import {
   faWallet,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React from "react";
+import React, { useEffect } from "react";
 import CenteredWrapper from "../components/CenteredWrapper";
 import { useModal } from "../pot/[id]/components/EBModal";
 import CreateOrEditPotForm from "./CreateOrEditPotForm";
 import { PotsProvider, usePots } from "../hooks/contexts/usePots";
 import ConfirmPotDeletion from "./ConfirmPotDeletion";
 import AuthGuard from "../auth/AuthGuard";
-import { useAuth } from "../auth/context/AuthContext";
-import { initUserCollection } from "../auth/utils/firestore-utils";
+import { UNDEFINED, useAuth } from "../auth/context/AuthContext";
+import { getAllPots, initUserCollection } from "../auth/utils/firestore-utils";
 import { generateUniqueId } from "../hooks/contexts/useTransactions";
 import { makeDate } from "../lib/utils";
+import Loading from "../components/Loading";
 
 // const banks = [
 //   { id: 1, name: "GCB Ghana Cedi", balance: "14,500" },
@@ -28,7 +29,9 @@ const PotHome = () => {
   const { Modal, openModal, closeModal } = useModal();
 
   const { user } = useAuth();
-  const { pots, addPot, editPot, removePot } = usePots();
+  const { potData, addPot, editPot, removePot, setPotData } = usePots();
+
+  const pots = potData?.pots;
 
   const createOrEditPot = (pot) => {
     openModal(
@@ -42,6 +45,7 @@ const PotHome = () => {
             ...content,
             id: generateUniqueId("pot_"),
             createdAt: makeDate(),
+            user_id: user?.uid,
           });
         }}
       />
@@ -61,28 +65,22 @@ const PotHome = () => {
     );
   };
 
-  // const deletePot = (id) => {
-  //   console.log("Deleting pot with id", id);
-  // };
-
   const navigateToPot = (id) => {
-    window.open(`/pot/${id}`, "_blank");
+    window.open(`/pot/${id}?c=${user?.uid}`, "_blank");
   };
 
-  // if (!pots?.length)
-  //   return (
-  //     <div className="text-center text-gray-500 mt-8">
-  //       <p className="text-lg">
-  //         No pots yet. Start by creating your first pot!
-  //       </p>
-  //       <FontAwesomeIcon
-  //         icon={faPlus}
-  //         className="text-4xl mt-4 text-gray-300"
-  //       />
-  //     </div>
-  //   );
+  useEffect(() => {
+    if (!user?.uid) return;
+    getAllPots(user?.uid).then((response) => {
+      setPotData(response);
+    });
+  }, [user?.uid]);
+
+  if (potData?.key === UNDEFINED)
+    return <Loading full message="fetching content..." />;
 
   const noPots = !pots?.length;
+
   return (
     <AuthGuard signout>
       <CenteredWrapper>
@@ -165,7 +163,10 @@ const PotHome = () => {
           ))}
 
           {!noPots && (
-            <div className="border group hover:border-2 hover:border-green-500 border-gray-300 rounded p-4 flex flex-col items-center justify-center text-gray-400 cursor-pointer shadow-sm">
+            <div
+              onClick={() => createOrEditPot()}
+              className="border group hover:border-2 hover:border-green-500 border-gray-300 rounded p-4 flex flex-col items-center justify-center text-gray-400 cursor-pointer shadow-sm"
+            >
               {/* <span className="text-4xl">+</span> */}
               <FontAwesomeIcon
                 icon={faPlus}

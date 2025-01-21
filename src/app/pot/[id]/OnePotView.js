@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import CenteredWrapper from "@/app/components/CenteredWrapper";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -33,12 +33,16 @@ import {
 import { useBorrow } from "@/app/hooks/contexts/useBorrow";
 import AuthGuard from "@/app/auth/AuthGuard";
 import { makeDate } from "@/app/lib/utils";
+import { UNDEFINED, useAuth } from "@/app/auth/context/AuthContext";
+import { getAllPots } from "@/app/auth/utils/firestore-utils";
 
-function OnePotView({ potId }) {
+function OnePotView({ potId, userId }) {
   const { Modal, openModal, closeModal } = useModal();
+  const [notFound, setNotFound] = useState(false);
   const router = useRouter();
   const {
-    pots,
+    potData,
+    setPotData,
     editPot,
     addPartToPot,
     updatePartInPot,
@@ -49,8 +53,9 @@ function OnePotView({ potId }) {
 
   const { transactions, addDeposit, addWithdrawal } = useTransactions();
 
-  const { borrows, addBorrow, markAsPaid } = useBorrow();
+  const { borrows, addBorrow } = useBorrow();
 
+  const pots = potData?.pots || [];
   const targetPot = pots.find((pot) => pot.id?.toString() === potId);
 
   const editPotContent = () => {
@@ -66,22 +71,28 @@ function OnePotView({ potId }) {
     );
   };
 
-  //  ------------------- 0. Loading -------------------
-  if (!targetPot) return <Loading full />;
+  useEffect(() => {
+    getAllPots(userId).then((data) => {
+      console.log("This is the data", data);
+      setPotData(data);
+      if (!data) setNotFound(true);
+    });
+  }, [userId]);
 
-  //   ------------------- 1. IF Not Found -------------------
-
-  if (!potId || !targetPot)
-    return <Fallback message="Pot not found" backUrl="/home" />;
-
-  //   ------------------- -------------------
-
-  const { name, parts, balance } = targetPot;
+  const { name, parts, balance } = targetPot || {};
 
   const sumOfAllPartitionBalance = useMemo(
-    () => parts.reduce((acc, part) => acc + Number(part?.balance), 0),
+    () => parts?.reduce((acc, part) => acc + Number(part?.balance), 0) || 0,
     [targetPot, parts, balance]
   );
+
+  console.log("SUM OF ALL, balance", sumOfAllPartitionBalance, balance);
+
+  //  ------------------- 0. Loading -------------------
+  if (potData?.key === UNDEFINED) return <Loading full />;
+  //   ------------------- 1. IF Not Found -------------------
+  if (notFound) return <Fallback message="Pot not found" backUrl="/home" />;
+  //   ------------------- -------------------
 
   const createOrEditPartition = (content) => {
     openModal(
@@ -109,7 +120,7 @@ function OnePotView({ potId }) {
 
   const createDeposit = (content, partition) => {
     // Add transaction
-    addDeposit({  ...content, source: partition?.name });
+    addDeposit({ ...content, source: partition?.name });
     // Update partition balance
     const amount = Number(content?.amount);
     updatePotWithDeposit(targetPot?.id, partition?.id, amount);

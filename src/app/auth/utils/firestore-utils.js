@@ -23,9 +23,12 @@ export const initUserCollection = async (userId) => {
       });
 
       // Create default documents within the user's collection
-      await setDoc(doc(db, userId, POTS), { pots: [] });
-      await setDoc(doc(db, userId, TRANSACTIONS), { transactions: [] });
-      await setDoc(doc(db, userId, BORROWED), { borrowed: [] });
+      await setDoc(doc(db, userId, POTS), { key: userId, pots: [] });
+      await setDoc(doc(db, userId, TRANSACTIONS), {
+        key: userId,
+        transactions: [],
+      });
+      await setDoc(doc(db, userId, BORROWED), { key: userId, borrowed: [] });
 
       console.log(`FS-DB atts initialized successfully.`);
     } else {
@@ -106,3 +109,43 @@ export const updateBorrowed = async (userId, borrowedData) => {
     throw new Error("Failed to update BORROWED.");
   }
 };
+
+/**
+ * Fetch all pots from Firestore.
+ * Retrieves the "POTS" document from the specified collection.
+ *
+ * @param {string} collectionId - The Firestore collection ID.
+ * @returns {Promise<Array>} - An array of pots.
+ */
+export const getAllPots = async (collectionId) => {
+  try {
+    const potDocRef = doc(db, collectionId, POTS);
+    const potSnapshot = await getDoc(potDocRef);
+
+    if (!potSnapshot.exists()) {
+      throw new Error("POTS document not found");
+    }
+
+    const potData = potSnapshot.data();
+    return potData; // Return pots array or empty array if not found
+  } catch (error) {
+    console.error("Error fetching all pots:", error);
+    return;
+  }
+};
+
+/**
+ * Function to update pots in Firestore under the specified collection ID.
+ * @param {string} collectionId - The collection ID from the URL.
+ * @param {Array} pots - The array of pots to be stored in Firestore.
+ */
+export async function updatePotsInFirestore(collectionId, potData) {
+  try {
+    const potsRef = doc(db, collectionId, POTS);
+    // await setDoc(potsRef, { pots }, { merge: true }); // Merges existing data
+    await setDoc(potsRef, potData);
+    console.log("Pots successfully updated in Firestore");
+  } catch (error) {
+    console.error("Error updating pots in Firestore:", error);
+  }
+}

@@ -1,57 +1,76 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import { UNDEFINED } from "@/app/auth/context/AuthContext";
+import { updatePotsInFirestore } from "@/app/auth/utils/firestore-utils";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
-export const POTS = [
-  {
-    name: "GCB Ghana Cedi",
-    balance: 12456,
-    id: 1,
-    currency: "GHS",
-    parts: [
-      { name: "Savings", balance: 8456, id: 1, currency: "GHS" },
-      { name: "Investment", balance: 34456, id: 2, currency: "GHS" },
-      { name: "Emergency", balance: 50456, id: 3, currency: "GHS" },
-    ],
-  },
-  {
-    name: "First Atlantic USD",
-    balance: 12456,
-    id: 2,
-    currency: "USD",
-    parts: [
-      { name: "Savings", balance: 10456, id: 1, currency: "USD" },
-      { name: "Investment", balance: 102456, id: 2, currency: "USD" },
-      { name: "Emergency", balance: 9456, id: 3, currency: "USD" },
-    ],
-  },
-  // Add more pots here...
-];
+// export const POTS = [
+//   {
+//     name: "GCB Ghana Cedi",
+//     balance: 12456,
+//     id: 1,
+//     currency: "GHS",
+//     parts: [
+//       { name: "Savings", balance: 8456, id: 1, currency: "GHS" },
+//       { name: "Investment", balance: 34456, id: 2, currency: "GHS" },
+//       { name: "Emergency", balance: 50456, id: 3, currency: "GHS" },
+//     ],
+//   },
+//   {
+//     name: "First Atlantic USD",
+//     balance: 12456,
+//     id: 2,
+//     currency: "USD",
+//     parts: [
+//       { name: "Savings", balance: 10456, id: 1, currency: "USD" },
+//       { name: "Investment", balance: 102456, id: 2, currency: "USD" },
+//       { name: "Emergency", balance: 9456, id: 3, currency: "USD" },
+//     ],
+//   },
+//   // Add more pots here...
+// ];
 
 const PotsContext = createContext();
 
 export const PotsProvider = ({ children }) => {
-  const [pots, setPots] = useState([]);
+  const [potData, setPotData] = useState({ key: UNDEFINED, pots: null });
+  // const searchParams = useSearchParams();
+  // const collectionId = searchParams.get("c"); // Get collection ID from URL
+
+  // Sync potData to Firestore whenever it changes
+  useEffect(() => {
+    if (potData?.pots?.length > 0) {
+      updatePotsInFirestore(potData?.key, potData);
+    }
+  }, [potData?.pots]);
 
   const addPot = (newPot) => {
-    setPots((prevPots) => [...prevPots, newPot]);
+    setPotData((prevPotData) => ({
+      ...prevPotData,
+      pots: [...prevPotData.pots, newPot],
+    }));
   };
 
   const removePot = (potId) => {
-    setPots((prevPots) => prevPots.filter((pot) => pot.id !== potId));
+    setPotData((prevPotData) => ({
+      ...prevPotData,
+      pots: prevPotData.pots.filter((pot) => pot.id !== potId),
+    }));
   };
 
   const editPot = (updatedPot) => {
-    setPots((prevPots) =>
-      prevPots.map((pot) =>
+    setPotData((prevPotData) => ({
+      ...prevPotData,
+      pots: prevPotData.pots.map((pot) =>
         pot.id === updatedPot.id ? { ...pot, ...updatedPot } : pot
-      )
-    );
+      ),
+    }));
   };
 
   const addPartToPot = (potId, newPart) => {
-    setPots((prevPots) =>
-      prevPots.map((pot) => {
+    setPotData((prevPotData) => ({
+      ...prevPotData,
+      pots: prevPotData.pots.map((pot) => {
         if (pot.id === potId) {
           return {
             ...pot,
@@ -59,13 +78,14 @@ export const PotsProvider = ({ children }) => {
           };
         }
         return pot;
-      })
-    );
+      }),
+    }));
   };
 
   const removePartFromPot = (potId, partId) => {
-    setPots((prevPots) =>
-      prevPots.map((pot) => {
+    setPotData((prevPotData) => ({
+      ...prevPotData,
+      pots: prevPotData.pots.map((pot) => {
         if (pot.id === potId) {
           return {
             ...pot,
@@ -73,13 +93,14 @@ export const PotsProvider = ({ children }) => {
           };
         }
         return pot;
-      })
-    );
+      }),
+    }));
   };
 
   const updatePartInPot = (potId, updatedPart) => {
-    setPots((prevPots) =>
-      prevPots.map((pot) => {
+    setPotData((prevPotData) => ({
+      ...prevPotData,
+      pots: prevPotData.pots.map((pot) => {
         if (pot.id === potId) {
           return {
             ...pot,
@@ -89,13 +110,14 @@ export const PotsProvider = ({ children }) => {
           };
         }
         return pot;
-      })
-    );
+      }),
+    }));
   };
 
   const updatePotWithDeposit = (potId, partId, amount) => {
-    setPots((prevPots) => {
-      return prevPots.map((pot) => {
+    setPotData((prevPotData) => ({
+      ...prevPotData,
+      pots: prevPotData.pots.map((pot) => {
         if (pot.id === potId) {
           const updatedParts = pot.parts.map((part) =>
             part.id === partId
@@ -110,13 +132,14 @@ export const PotsProvider = ({ children }) => {
           };
         }
         return pot;
-      });
-    });
+      }),
+    }));
   };
 
   const updatePotWithWithdrawal = (potId, partId, amount) => {
-    setPots((prevPots) => {
-      return prevPots.map((pot) => {
+    setPotData((prevPotData) => ({
+      ...prevPotData,
+      pots: prevPotData.pots.map((pot) => {
         if (pot.id === potId) {
           const updatedParts = pot.parts.map((part) =>
             part.id === partId
@@ -131,14 +154,15 @@ export const PotsProvider = ({ children }) => {
           };
         }
         return pot;
-      });
-    });
+      }),
+    }));
   };
 
   return (
     <PotsContext.Provider
       value={{
-        pots,
+        potData,
+        setPotData,
         addPot,
         removePot,
         editPot,
