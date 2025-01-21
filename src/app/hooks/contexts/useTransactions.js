@@ -1,4 +1,5 @@
 "use client";
+import { makeDate } from "@/app/lib/utils";
 import { createContext, useContext, useReducer } from "react";
 
 const generateTransactionId = (pre = "txn_") => {
@@ -42,7 +43,7 @@ const transactionReducer = (state, action) => {
       return [
         {
           id: generateTransactionId(),
-          date: action.payload.date || new Date().toLocaleDateString(),
+          date: action.payload.date || makeDate(),
           type: "Deposit",
           amount: action.payload.amount,
           source: action.payload.source,
@@ -55,7 +56,7 @@ const transactionReducer = (state, action) => {
       return [
         {
           id: generateTransactionId(),
-          date: action.payload.date || new Date().toLocaleDateString(),
+          date: action.payload.date || makeDate(),
           type: "Withdrawal",
           amount: action.payload.amount,
           source: action.payload.source,
@@ -74,10 +75,7 @@ const TransactionContext = createContext();
 
 // Provider component
 export const TransactionProvider = ({ children }) => {
-  const [transactions, dispatch] = useReducer(
-    transactionReducer,
-    []
-  );
+  const [transactions, dispatch] = useReducer(transactionReducer, []);
 
   // Actions
   const addTransaction = (transaction) => {

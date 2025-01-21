@@ -32,6 +32,7 @@ import {
 } from "@/app/hooks/contexts/useTransactions";
 import { useBorrow } from "@/app/hooks/contexts/useBorrow";
 import AuthGuard from "@/app/auth/AuthGuard";
+import { makeDate } from "@/app/lib/utils";
 
 function OnePotView({ potId }) {
   const { Modal, openModal, closeModal } = useModal();
@@ -93,8 +94,8 @@ function OnePotView({ potId }) {
             return updatePartInPot(targetPot?.id, { ...content, ...formData });
           addPartToPot(targetPot?.id, {
             ...formData,
-            id: generateUniqueId(),
-            date: new Date().toLocaleString(),
+            id: generateUniqueId("prt_"),
+            date: makeDate(),
           });
         }}
       />
@@ -108,7 +109,7 @@ function OnePotView({ potId }) {
 
   const createDeposit = (content, partition) => {
     // Add transaction
-    addDeposit({ ...content, source: partition?.name });
+    addDeposit({  ...content, source: partition?.name });
     // Update partition balance
     const amount = Number(content?.amount);
     updatePotWithDeposit(targetPot?.id, partition?.id, amount);

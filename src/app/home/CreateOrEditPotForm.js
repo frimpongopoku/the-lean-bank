@@ -20,12 +20,11 @@ function CreateOrEditPotForm({ onSubmit, isEdit, data }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isEdit) return onSubmit(formData);
-    onSubmit({ id: new Date()?.getMilliseconds(), ...formData });
-    // Add logic to handle the form submission (e.g., API call)
+    onSubmit(formData);
   };
 
   useEffect(() => {
-    setFormData(data);
+    if (data) setFormData(data);
   }, [data?.toString()]);
 
   return (
@@ -41,7 +40,7 @@ function CreateOrEditPotForm({ onSubmit, isEdit, data }) {
           label="Name"
           name="name"
           type="text"
-          value={formData.name}
+          value={formData?.name}
           onChange={handleChange}
           placeholder="Enter name"
           maxLength={40}
@@ -50,7 +49,7 @@ function CreateOrEditPotForm({ onSubmit, isEdit, data }) {
           label="Currency"
           name="currency"
           type="text"
-          value={formData.currency}
+          value={formData?.currency}
           onChange={handleChange}
           placeholder="Enter currency"
           maxLength={3}
@@ -59,7 +58,7 @@ function CreateOrEditPotForm({ onSubmit, isEdit, data }) {
           label="Amount"
           name="balance"
           type="number"
-          value={formData.balance}
+          value={formData?.balance}
           onChange={handleChange}
           placeholder="Enter amount"
         />

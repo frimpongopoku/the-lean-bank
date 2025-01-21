@@ -1,5 +1,6 @@
 import { doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "./firebaseConfig";
+import { makeDate } from "@/app/lib/utils";
 
 export const POTS = "POTS";
 export const TRANSACTIONS = "TRANSACTIONS";
@@ -18,7 +19,7 @@ export const initUserCollection = async (userId) => {
     if (!userSnapshot.exists()) {
       // Create the user's collection and meta document
       await setDoc(userDocRef, {
-        createdAt: new Date().toISOString(),
+        createdAt: makeDate(),
       });
 
       // Create default documents within the user's collection

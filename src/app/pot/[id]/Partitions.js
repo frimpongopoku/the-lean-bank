@@ -16,6 +16,7 @@ import BorrowForm from "../forms/BorrowForm";
 import WalletDeleteConfirmation from "./components/WalletDeleteConfirmation";
 import { usePots } from "@/app/hooks/contexts/usePots";
 import { useTransactions } from "@/app/hooks/contexts/useTransactions";
+import { makeDate } from "@/app/lib/utils";
 function Partitions({
   data,
   totalSum,
@@ -59,7 +60,7 @@ function Partitions({
               source: partition?.name,
               source_id: partition?.id,
               paid: false,
-              date: new Date().toLocaleDateString(),
+              date: makeDate(),
             },
             partition
           );

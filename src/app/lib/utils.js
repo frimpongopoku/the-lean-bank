@@ -16,3 +16,7 @@ export const generatePDF = (
     console.error("No content found to print");
   }
 };
+
+export const makeDate = () => {
+  return new Date();
+};

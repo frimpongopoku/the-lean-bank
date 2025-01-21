@@ -31,7 +31,7 @@ export const POTS = [
 const PotsContext = createContext();
 
 export const PotsProvider = ({ children }) => {
-  const [pots, setPots] = useState(POTS);
+  const [pots, setPots] = useState([]);
 
   const addPot = (newPot) => {
     setPots((prevPots) => [...prevPots, newPot]);
@@ -119,9 +119,11 @@ export const PotsProvider = ({ children }) => {
       return prevPots.map((pot) => {
         if (pot.id === potId) {
           const updatedParts = pot.parts.map((part) =>
-            part.id === partId ? { ...part, balance: Number(part.balance) - amount } : part
+            part.id === partId
+              ? { ...part, balance: Number(part.balance) - amount }
+              : part
           );
-  
+
           return {
             ...pot,
             balance: Number(pot.balance) - amount,
@@ -132,8 +134,6 @@ export const PotsProvider = ({ children }) => {
       });
     });
   };
-  
-
 
   return (
     <PotsContext.Provider

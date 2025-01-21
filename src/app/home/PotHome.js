@@ -16,6 +16,8 @@ import ConfirmPotDeletion from "./ConfirmPotDeletion";
 import AuthGuard from "../auth/AuthGuard";
 import { useAuth } from "../auth/context/AuthContext";
 import { initUserCollection } from "../auth/utils/firestore-utils";
+import { generateUniqueId } from "../hooks/contexts/useTransactions";
+import { makeDate } from "../lib/utils";
 
 // const banks = [
 //   { id: 1, name: "GCB Ghana Cedi", balance: "14,500" },
@@ -31,12 +33,16 @@ const PotHome = () => {
   const createOrEditPot = (pot) => {
     openModal(
       <CreateOrEditPotForm
-        isEdit={pot}
+        isEdit={pot?.id}
         data={pot}
         onSubmit={(content) => {
           closeModal();
-          if (pot) return editPot(content);
-          addPot(content);
+          if (pot) return editPot({ ...pot, ...content });
+          addPot({
+            ...content,
+            id: generateUniqueId("pot_"),
+            createdAt: makeDate(),
+          });
         }}
       />
     );
@@ -100,7 +106,7 @@ const PotHome = () => {
             Setup Collection
           </button> */}
           <button
-            onClick={createOrEditPot}
+            onClick={() => createOrEditPot()}
             className="font-bold hover:bg-green-700 bg-green-600 text-white px-4 py-2 rounded"
           >
             Add a New Pot
