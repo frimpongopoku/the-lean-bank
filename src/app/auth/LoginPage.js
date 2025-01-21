@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { useAuth } from "./context/AuthContext";
 import { faAngleRight } from "@fortawesome/free-solid-svg-icons";
+import { initUserCollection } from "./utils/firestore-utils";
 
 export default function LoginPage() {
   const { user } = useAuth();
@@ -16,10 +17,15 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      // Get the authenticated user's unique ID
+      const userId = result.user.uid;
+      // Initialize Firestore collection for the user
+      await initUserCollection(userId);
       router.push("/home");
     } catch (err) {
       setError("Failed to sign in. Please try again.");
+      console.log("Login Error: ", err);
     }
   };
 
