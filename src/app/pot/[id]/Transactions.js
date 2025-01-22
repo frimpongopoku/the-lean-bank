@@ -8,12 +8,29 @@ import { formatDateTime, generatePDF } from "@/app/lib/utils";
 import { TRANSACTIONS } from "@/app/seed/transaction-seed";
 
 export default function Transactions({ data }) {
+  const renderType = (data) => {
+    if (data?.type === "Deposit") {
+      return <span className="text-green-600 font-semibold">Deposit</span>;
+    }
+    return <span className="text-red-600 font-semibold">Withdrawal</span>;
+  };
+  const renderAmount = (data) => {
+    if (data?.type === "Deposit") {
+      return (
+        <span className="text-green-600 font-semibold">{data?.amount}</span>
+      );
+    }
+    return <span className="text-red-600 font-semibold">{data?.amount}</span>;
+  };
   const transformToTableFormat = (transactions) => {
     return transactions?.map((txn) => [
       // { value: txn.id },
       { value: formatDateTime(txn.date) },
-      { value: txn.type },
-      { value: txn.amount },
+      { func: () => renderType(txn) },
+      // { value: txn.type },
+      // { value: txn.amount },
+      { func: () => renderAmount(txn) },
+      // { value: txn.amount },
       { value: txn.source },
       { value: txn.description },
     ]);
@@ -47,8 +64,13 @@ export default function Transactions({ data }) {
 
       <div className="flex gap-4 mb-4">
         <button
-          onClick={generatePDF}
-          className="text-green-600 font-bold flex items-center gap-2"
+          onClick={() =>
+            generatePDF(
+              "Transactions",
+              `${formatDateTime(new Date())}-transactions`
+            )
+          }
+          className="text-green-600 font-bold flex items-center gap-2 cursor-pointer"
         >
           <FontAwesomeIcon icon={faDownload} /> Download
         </button>

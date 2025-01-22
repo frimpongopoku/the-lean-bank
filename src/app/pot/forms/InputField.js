@@ -10,13 +10,14 @@ const InputField = ({
   required = false,
   textarea,
   name,
+  placeholder,
 }) => {
   const labelJsx = (
     <label
       className="block text-gray-700 text-sm font-bold mb-2"
       htmlFor={label}
     >
-      {label}
+      {label} {required && <span className="text-red-500">*</span>}
     </label>
   );
 
@@ -25,6 +26,7 @@ const InputField = ({
       <div className="mb-4">
         {labelJsx}
         <textarea
+          placeholder={placeholder}
           name={name}
           id={label}
           type={type}
@@ -33,13 +35,16 @@ const InputField = ({
           maxLength={maxLength}
           required={required}
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-        ></textarea>
+        >
+          {placeholder || ""}
+        </textarea>
       </div>
     );
   return (
     <div className="mb-4">
       {labelJsx}
       <input
+        placeholder={placeholder}
         name={name}
         id={label}
         type={type}

@@ -29,6 +29,7 @@ const SpendForm = ({
       </div>
       <InputField
         label="Amount"
+        placeholder={`Enter amount...`}
         type="number"
         name="amount"
         value={formData.amount}
@@ -38,6 +39,7 @@ const SpendForm = ({
       <InputField
         textarea
         name="description"
+        placeholder={`Enter description...`}
         label="Description"
         value={formData.description}
         onChange={handleChange}

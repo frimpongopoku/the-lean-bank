@@ -73,6 +73,7 @@ function Partitions({
   const remove = (id) => {
     openModal(
       <WalletDeleteConfirmation
+        onCancel={() => closeModal()}
         onConfirm={() => {
           onRemove(id);
           closeModal();

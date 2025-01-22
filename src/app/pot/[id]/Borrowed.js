@@ -4,7 +4,7 @@ import TransactionsTable from "./components/TransactionTable"; // Adjust the pat
 import { useModal } from "./components/EBModal";
 import PayUpConfirmation from "./components/PayUpConfirmation";
 import { useBorrow } from "@/app/hooks/contexts/useBorrow";
-import { formatDateTime } from "@/app/lib/utils";
+import { formatDateTime, generatePDF } from "@/app/lib/utils";
 
 export default function Transactions({ data, payUpIntoSource }) {
   const { Modal, openModal, closeModal } = useModal();
@@ -35,6 +35,9 @@ export default function Transactions({ data, payUpIntoSource }) {
     );
   };
 
+  const renderAmount = (data) => {
+    return <span className="text-red-600 font-semibold">{data?.amount}</span>;
+  };
   const renderPay = (data) => {
     if (data?.paid)
       return <span className="text-green-700 font-semibold">Paid</span>;
@@ -52,7 +55,7 @@ export default function Transactions({ data, payUpIntoSource }) {
     return b.map((txn) => [
       // { value: txn.id },
       { value: txn.source },
-      { value: txn.amount },
+      { func: () => renderAmount(txn) },
       { value: formatDateTime(txn.date) },
       { value: txn.description },
       { func: () => renderPay(txn) },
@@ -85,15 +88,24 @@ export default function Transactions({ data, payUpIntoSource }) {
       </div> */}
 
       <div className="flex gap-4 mb-4">
-        <a href="#" className="text-green-600 font-bold">
+        <button
+          onClick={() =>
+            generatePDF(
+              "Borrows",
+              `${formatDateTime(new Date())}-borrows`,
+              ".printable-borrowed-area"
+            )
+          }
+          className="text-green-600 font-bold cursor-pointer"
+        >
           <FontAwesomeIcon icon={faDownload} /> Download
-        </a>
+        </button>
         {/* <a href="#" className="text-green-600 font-bold">
           Show All
         </a> */}
       </div>
 
-      <div className=" shadow-xl bg-white rounded-lg p-4">
+      <div className=" printable-borrowed-area shadow-xl bg-white rounded-lg p-4">
         <TransactionsTable
           data={borrows}
           head={tableHeadings}

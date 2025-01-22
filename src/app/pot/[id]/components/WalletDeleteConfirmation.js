@@ -9,7 +9,12 @@ const WalletDeleteConfirmation = ({ onConfirm, onCancel }) => {
         <h2 className="text-xl font-semibold text-gray-800 mb-4">
           Are you sure you want to remove this?
         </h2>
+
         <p className="text-gray-600 mb-4">
+          Go ahead and select "Yes" to remove this partition.
+          <br /> This action cannot be undone.
+        </p>
+        {/* <p className="text-gray-600 mb-4">
           What action do you want to take with the funds?
         </p>
 
@@ -38,18 +43,18 @@ const WalletDeleteConfirmation = ({ onConfirm, onCancel }) => {
               Remove and add funds back to main wallet
             </span>
           </label>
-        </div>
+        </div> */}
 
         <div className="flex justify-end space-x-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 focus:outline-none"
+            className="px-4 py-2 cursor-pointer bg-gray-200 text-gray-700 rounded hover:bg-gray-300 focus:outline-none"
           >
             Cancel
           </button>
           <button
             onClick={() => onConfirm(selectedOption)}
-            disabled={!selectedOption}
+            // disabled={!selectedOption}
             className={`px-4 py-2 rounded text-white ${
               selectedOption
                 ? "bg-blue-500 hover:bg-blue-600"

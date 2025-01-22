@@ -38,6 +38,7 @@ const CreateOrEditPartition = ({ onSubmit, mode = "create", data }) => {
       <form onSubmit={handleSubmit} className="max-w-lg mx-auto p-4 w-[500]">
         <InputField
           label="Name"
+          placeholder="Enter name..."
           name="name"
           value={formData.name}
           onChange={handleChange}
@@ -46,6 +47,7 @@ const CreateOrEditPartition = ({ onSubmit, mode = "create", data }) => {
         />
         <InputField
           label="Abbreviation"
+          placeholder="(optional)Add an abbreviation..."
           name="abbreviation"
           value={formData.abbreviation}
           onChange={handleChange}
@@ -53,6 +55,7 @@ const CreateOrEditPartition = ({ onSubmit, mode = "create", data }) => {
         />
         <InputField
           label="Amount"
+          placeholder="Enter amount"
           name="balance"
           type="number"
           value={formData.balance}
@@ -63,6 +66,7 @@ const CreateOrEditPartition = ({ onSubmit, mode = "create", data }) => {
           <InputField
             label="Description (reason for edit)"
             name="description"
+            placeholder="Enter description..."
             value={formData.description}
             onChange={handleChange}
           />

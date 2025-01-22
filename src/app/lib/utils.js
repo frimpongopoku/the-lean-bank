@@ -2,14 +2,15 @@ import { format } from "date-fns";
 import jsPDF from "jspdf";
 
 export const generatePDF = (
-  cssSelector = ".printable-area",
-  filename = "lean-bank-generated-pdf"
+  title = "Transactions",
+  filename = "lean-bank-generated-pdf",
+  cssSelector = ".printable-area"
 ) => {
   const doc = new jsPDF();
   const content = document.querySelector(cssSelector);
 
   if (content) {
-    doc.text("Transactions", 10, 10); // Add a title to the PDF
+    doc.text(title, 10, 10); // Add a title to the PDF
     doc.autoTable({
       html: content.querySelector("table"), // Use the table inside printable-area
     });
@@ -22,7 +23,6 @@ export const generatePDF = (
 export const makeDate = () => {
   return new Date();
 };
-
 
 /**
  * Detects the date type and formats it to "day/month/year h:m:s"
