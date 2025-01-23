@@ -15,17 +15,15 @@ import { PotsProvider, usePots } from "../hooks/contexts/usePots";
 import ConfirmPotDeletion from "./ConfirmPotDeletion";
 import AuthGuard from "../auth/AuthGuard";
 import { UNDEFINED, useAuth } from "../auth/context/AuthContext";
-import {
-  getAllPots,
-
-  NOT_FOUND,
-} from "../auth/utils/firestore-utils";
+import { getAllPots, NOT_FOUND } from "../auth/utils/firestore-utils";
 import { generateUniqueId } from "../hooks/contexts/useTransactions";
 import { makeDate } from "../lib/utils";
 import Loading from "../components/Loading";
 import MaskNumber from "../components/MaskNumber";
 import { useRouter } from "next/navigation";
-
+import Image from "next/image";
+import image from "./../images/pnb2.webp";
+import LogoArea from "../components/LogoArea";
 const PotHome = () => {
   const { Modal, openModal, closeModal } = useModal();
   const router = useRouter();
@@ -91,6 +89,7 @@ const PotHome = () => {
     <AuthGuard signout>
       <CenteredWrapper>
         <Modal />
+        <LogoArea />
         <h1 className="text-6xl font-bold mb-4 text-center">Pots</h1>
         <p className="text-gray-600 mb-6 text-center text-lg">
           <span className="text-xl">👋</span> Hello{" "}

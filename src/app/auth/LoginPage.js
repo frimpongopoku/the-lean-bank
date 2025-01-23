@@ -9,6 +9,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useAuth } from "./context/AuthContext";
 import { faAngleRight } from "@fortawesome/free-solid-svg-icons";
 import { initUserCollection } from "./utils/firestore-utils";
+import LogoArea from "../components/LogoArea";
 
 export default function LoginPage() {
   const { user } = useAuth();
@@ -30,11 +31,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
+    <div className="flex flex-col justify-center items-center h-screen bg-gray-100">
+      <LogoArea />
       <div className=" flex flex-col items-center text-center">
-        <p className="text-8xl font-bold text-green-600 mb-3">
-          Pots & Balances
-        </p>
+        <p className="text-6xl font-bold text-black mb-3">Pots & Balances</p>
         <h1 className="text-xl font-normal mb-4 text-gray-500">
           Sign in to your account
         </h1>
