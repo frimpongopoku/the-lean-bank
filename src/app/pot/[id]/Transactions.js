@@ -7,7 +7,7 @@ import "jspdf-autotable";
 import { formatDateTime, generatePDF } from "@/app/lib/utils";
 import { TRANSACTIONS } from "@/app/seed/transaction-seed";
 
-export default function Transactions({ data }) {
+export default function Transactions({ data, potId }) {
   const renderType = (data) => {
     if (data?.type === "Deposit") {
       return <span className="text-green-600 font-semibold">Deposit</span>;
@@ -36,7 +36,12 @@ export default function Transactions({ data }) {
     ]);
   };
 
-  const transactions = transformToTableFormat(data);
+  const filtered = (data?.filter((txn) => txn?.pot_id === potId) || []).slice(
+    0,
+    50
+  );
+
+  const transactions = transformToTableFormat(filtered);
 
   const tableHeadings = [
     // "ID",
@@ -72,12 +77,15 @@ export default function Transactions({ data }) {
           }
           className="text-green-600 font-bold flex items-center gap-2 cursor-pointer"
         >
-          <FontAwesomeIcon icon={faDownload} /> Download
+          <FontAwesomeIcon icon={faDownload} /> Download All
         </button>
         {/* <a href="#" className="text-green-600 font-bold">
           Show All
         </a> */}
       </div>
+      <p className="text-gray-500 text-sm mb-2">
+        Only shows the most recent 50. Download all to see all transactions
+      </p>
 
       <div className="printable-area shadow-xl bg-white rounded-lg p-4">
         <TransactionsTable data={transactions} head={tableHeadings} />

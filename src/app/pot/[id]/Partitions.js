@@ -17,6 +17,7 @@ import WalletDeleteConfirmation from "./components/WalletDeleteConfirmation";
 import { usePots } from "@/app/hooks/contexts/usePots";
 import { useTransactions } from "@/app/hooks/contexts/useTransactions";
 import { makeDate } from "@/app/lib/utils";
+import MaskNumber from "@/app/components/MaskNumber";
 function Partitions({
   data,
   totalSum,
@@ -85,10 +86,10 @@ function Partitions({
   return (
     <div className="py-6">
       {totalSum ? (
-        <p className="mb-2">
+        <p className="mb-2 flex flex-row items-center">
           <span>Total</span>{" "}
-          <span className="font-bold text-lg text-green-800">
-            {Number(totalSum)?.toLocaleString()}
+          <span className="ml-2 font-bold text-lg text-green-800">
+            <MaskNumber number={Number(totalSum)?.toLocaleString()} />
           </span>
         </p>
       ) : (
@@ -144,7 +145,7 @@ const Card = ({
                 icon={faWallet}
                 className="text-green-500 text-2xl mr-3"
               />
-              {Number(balance)?.toLocaleString()}
+              <MaskNumber number={Number(balance)?.toLocaleString()} />
             </span>
             <FontAwesomeIcon
               onClick={editFxn}

@@ -6,7 +6,7 @@ import PayUpConfirmation from "./components/PayUpConfirmation";
 import { useBorrow } from "@/app/hooks/contexts/useBorrow";
 import { formatDateTime, generatePDF } from "@/app/lib/utils";
 
-export default function Transactions({ data, payUpIntoSource }) {
+export default function Transactions({ data, potId, payUpIntoSource }) {
   const { Modal, openModal, closeModal } = useModal();
   const { borrow, markAsPaid } = useBorrow();
 
@@ -61,7 +61,12 @@ export default function Transactions({ data, payUpIntoSource }) {
       { func: () => renderPay(txn) },
     ]);
   };
-  const borrows = transformToTableFormat(data);
+
+  const filtered = (data?.filter((txn) => txn?.pot_id === potId) || []).slice(
+    0,
+    50
+  );
+  const borrows = transformToTableFormat(filtered);
 
   const tableHeadings = [
     "Wallet Source",
@@ -98,12 +103,16 @@ export default function Transactions({ data, payUpIntoSource }) {
           }
           className="text-green-600 font-bold cursor-pointer"
         >
-          <FontAwesomeIcon icon={faDownload} /> Download
+          <FontAwesomeIcon icon={faDownload} /> Download All
         </button>
         {/* <a href="#" className="text-green-600 font-bold">
           Show All
         </a> */}
       </div>
+      <p className="text-gray-500 text-sm mb-2">
+        Only shows the most recent 50. Download all to see all borrowed
+        transactions
+      </p>
 
       <div className=" printable-borrowed-area shadow-xl bg-white rounded-lg p-4">
         <TransactionsTable

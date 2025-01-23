@@ -63,6 +63,7 @@ const transactionReducer = (state, action) => {
         ...state,
         transactions: [
           {
+            ...(action?.payload || {}),
             id: generateTransactionId("dep_"),
             date: action.payload.date || makeDate(),
             type: "Deposit",
@@ -79,6 +80,7 @@ const transactionReducer = (state, action) => {
         ...state,
         transactions: [
           {
+            ...(action?.payload || {}),
             id: generateTransactionId("wit_"),
             date: action.payload.date || makeDate(),
             type: "Withdrawal",

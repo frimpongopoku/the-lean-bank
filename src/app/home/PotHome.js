@@ -19,6 +19,7 @@ import { getAllPots, initUserCollection } from "../auth/utils/firestore-utils";
 import { generateUniqueId } from "../hooks/contexts/useTransactions";
 import { makeDate } from "../lib/utils";
 import Loading from "../components/Loading";
+import MaskNumber from "../components/MaskNumber";
 
 // const banks = [
 //   { id: 1, name: "GCB Ghana Cedi", balance: "14,500" },
@@ -127,10 +128,14 @@ const PotHome = () => {
                 {bank.name}
               </h2>
               <p
-                onClick={() => navigateToPot(bank.id)}
-                className="text-green-600 hover:underline group-hover:text-green-50 font-bold mb-4 text-3xl"
+                // onClick={() => navigateToPot(bank.id)}
+                className="text-green-600  group-hover:text-green-50 font-bold mb-4 text-3xl"
               >
-                {Number(bank.balance)?.toLocaleString()}
+                <MaskNumber
+                  className={"group-hover:text-white"}
+                  number={Number(bank.balance)?.toLocaleString()}
+                />
+                {/* {Number(bank.balance)?.toLocaleString()} */}
               </p>
               <div className="flex flex-row items-center">
                 <span

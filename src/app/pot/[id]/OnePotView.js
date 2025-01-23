@@ -38,6 +38,7 @@ import {
   getAllPots,
   getUserCollection,
 } from "@/app/auth/utils/firestore-utils";
+import MaskNumber from "@/app/components/MaskNumber";
 
 function OnePotView({ potId, userId }) {
   const { Modal, openModal, closeModal } = useModal();
@@ -112,6 +113,7 @@ function OnePotView({ potId, userId }) {
             ...formData,
             id: generateUniqueId("prt_"),
             date: makeDate(),
+            pot_id: targetPot?.id,
           });
         }}
       />
@@ -128,6 +130,8 @@ function OnePotView({ potId, userId }) {
     addDeposit({
       ...content,
       source: partition?.name,
+      pot_id: targetPot?.id,
+      part_id: partition?.id,
     });
     // Update partition balance
     const amount = Number(content?.amount);
@@ -138,6 +142,8 @@ function OnePotView({ potId, userId }) {
     addWithdrawal({
       ...content,
       source: partition?.name,
+      pot_id: targetPot?.id,
+      part_id: partition?.id,
     });
     // Update partition balance
     const amount = Number(content?.amount);
@@ -145,7 +151,12 @@ function OnePotView({ potId, userId }) {
   };
 
   const doBorrow = (content, partition) => {
-    addBorrow({ ...content, id: generateUniqueId("bor_") });
+    addBorrow({
+      ...content,
+      id: generateUniqueId("bor_"),
+      pot_id: targetPot?.id,
+      part_id: partition?.id,
+    });
     // Update partition balance
     const amount = Number(content?.amount);
     // updatePotWithWithdrawal(targetPot?.id, partition?.id, amount);
@@ -185,13 +196,17 @@ function OnePotView({ potId, userId }) {
     {
       label: "Transactions",
       icon: faBook,
-      content: <Transactions data={transactions || []} />,
+      content: <Transactions potId={targetPot?.id} data={transactions || []} />,
     },
     {
       label: "Borrowed",
       icon: faMoneyBillTransfer,
       content: (
-        <Borrowed data={borrows || []} payUpIntoSource={payUpIntoSource} />
+        <Borrowed
+          data={borrows || []}
+          potId={targetPot?.id}
+          payUpIntoSource={payUpIntoSource}
+        />
       ),
     },
   ];
@@ -239,18 +254,22 @@ function OnePotView({ potId, userId }) {
             </p>
             <div className="my-4 bg-white border-green-600 flex flex-row items-center justify-between  shadow-md rounded-md mx-2 p-5">
               <div className="flex flex-row items-center">
-                <p className="text-green-700 flex flex-col ml-2 text-3xl mr-2">
-                  <span className="flex flex-row items-center">
-                    {Number(balance)?.toLocaleString()}
+                <div className="text-green-700 flex flex-col ml-2 text-3xl mr-2">
+                  <span className="flex flex-row items-center text-3xl">
                     <FontAwesomeIcon
                       onClick={editPotContent}
                       icon={faEdit}
-                      className="ml-2 text-2xl text-green-700 hover:text-green-600 cursor-pointer"
+                      className="mr-2 text-2xl text-green-700 hover:text-green-600 cursor-pointer"
                     />
+                    <MaskNumber
+                      // className="text-3xl"
+                      number={Number(balance)?.toLocaleString()}
+                    />
+                    {/* {Number(balance)?.toLocaleString()} */}
                   </span>
 
                   <span className="text-sm">Actual Account Value</span>
-                </p>
+                </div>
               </div>
               <div className="flex flex-row items-center mx-6">
                 <p
