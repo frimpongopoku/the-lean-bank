@@ -10,7 +10,7 @@ export const BORROWED = "BORROWED";
  * Initialize a user's Firestore collection if it doesn't exist
  * @param {string} userId - The authenticated user's ID
  */
-export const initUserCollection = async (userId) => {
+export const initUserCollection = async (userId, cb) => {
   try {
     const userCollectionRef = collection(db, userId);
     const userDocRef = doc(userCollectionRef, "meta");
@@ -29,12 +29,15 @@ export const initUserCollection = async (userId) => {
         transactions: [],
       });
       await setDoc(doc(db, userId, BORROWED), { key: userId, borrowed: [] });
-
+      cb && cb(true);
       console.log(`FS-DB atts initialized successfully.`);
     } else {
+      cb && cb(true);
+
       console.log(`User is an old Gee :)`);
     }
   } catch (error) {
+    cb && cb(false, "Failed to initialize FS-DB.");
     console.error("Error initializing FS-DB Collection:", error);
     throw new Error("Failed to initialize FS-DB.");
   }
@@ -114,6 +117,7 @@ export const updateBorrowed = async (userId, borrowedData) => {
   }
 };
 
+export const NOT_FOUND = "NOT_FOUND";
 /**
  * Fetch all pots from Firestore.
  * Retrieves the "POTS" document from the specified collection.
@@ -127,6 +131,7 @@ export const getAllPots = async (collectionId) => {
     const potSnapshot = await getDoc(potDocRef);
 
     if (!potSnapshot.exists()) {
+      return NOT_FOUND;
       throw new Error("POTS document not found");
     }
 
@@ -134,7 +139,6 @@ export const getAllPots = async (collectionId) => {
     return potData; // Return pots array or empty array if not found
   } catch (error) {
     console.error("Error fetching all pots:", error);
-    return;
   }
 };
 

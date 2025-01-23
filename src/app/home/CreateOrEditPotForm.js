@@ -44,6 +44,7 @@ function CreateOrEditPotForm({ onSubmit, isEdit, data }) {
           onChange={handleChange}
           placeholder="Enter name"
           maxLength={40}
+          required
         />
         <InputField
           label="Currency"
@@ -61,6 +62,7 @@ function CreateOrEditPotForm({ onSubmit, isEdit, data }) {
           value={formData?.balance}
           onChange={handleChange}
           placeholder="Enter amount"
+          required
         />
         <InputField
           textarea

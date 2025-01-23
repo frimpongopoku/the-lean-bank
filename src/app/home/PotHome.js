@@ -7,7 +7,7 @@ import {
   faWallet,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import CenteredWrapper from "../components/CenteredWrapper";
 import { useModal } from "../pot/[id]/components/EBModal";
 import CreateOrEditPotForm from "./CreateOrEditPotForm";
@@ -15,20 +15,22 @@ import { PotsProvider, usePots } from "../hooks/contexts/usePots";
 import ConfirmPotDeletion from "./ConfirmPotDeletion";
 import AuthGuard from "../auth/AuthGuard";
 import { UNDEFINED, useAuth } from "../auth/context/AuthContext";
-import { getAllPots, initUserCollection } from "../auth/utils/firestore-utils";
+import {
+  getAllPots,
+
+  NOT_FOUND,
+} from "../auth/utils/firestore-utils";
 import { generateUniqueId } from "../hooks/contexts/useTransactions";
 import { makeDate } from "../lib/utils";
 import Loading from "../components/Loading";
 import MaskNumber from "../components/MaskNumber";
-
-// const banks = [
-//   { id: 1, name: "GCB Ghana Cedi", balance: "14,500" },
-//   { id: 2, name: "First Atlantic USD", balance: "14,500" },
-// ];
+import { useRouter } from "next/navigation";
 
 const PotHome = () => {
   const { Modal, openModal, closeModal } = useModal();
+  const router = useRouter();
 
+  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const { potData, addPot, editPot, removePot, setPotData } = usePots();
 
@@ -72,7 +74,10 @@ const PotHome = () => {
 
   useEffect(() => {
     if (!user?.uid) return;
+    setLoading(true);
     getAllPots(user?.uid).then((response) => {
+      setLoading(false);
+      if (response === NOT_FOUND) return router.push("/init");
       setPotData(response);
     });
   }, [user?.uid]);
@@ -104,12 +109,16 @@ const PotHome = () => {
           >
             Setup Collection
           </button> */}
-          <button
-            onClick={() => createOrEditPot()}
-            className="font-bold hover:bg-green-700 bg-green-600 text-white px-4 py-2 rounded"
-          >
-            Add a New Pot
-          </button>
+          {loading ? (
+            <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
+          ) : (
+            <button
+              onClick={() => createOrEditPot()}
+              className="font-bold hover:bg-green-700 bg-green-600 text-white px-4 py-2 rounded"
+            >
+              Add a New Pot
+            </button>
+          )}
         </div>
         {noPots && (
           <div className="text-center text-gray-500 mt-8 mb-2">

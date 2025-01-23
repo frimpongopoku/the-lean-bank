@@ -14,7 +14,6 @@ const AuthGuard = ({ children, signout = false }) => {
     if (!user) {
       router.push("/auth");
     }
-    // else router.push("/home");
   }, [user, router]);
 
   if (user === UNDEFINED) {

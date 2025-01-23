@@ -34,10 +34,7 @@ import { useBorrow } from "@/app/hooks/contexts/useBorrow";
 import AuthGuard from "@/app/auth/AuthGuard";
 import { makeDate } from "@/app/lib/utils";
 import { UNDEFINED, useAuth } from "@/app/auth/context/AuthContext";
-import {
-  getAllPots,
-  getUserCollection,
-} from "@/app/auth/utils/firestore-utils";
+import { getUserCollection } from "@/app/auth/utils/firestore-utils";
 import MaskNumber from "@/app/components/MaskNumber";
 
 function OnePotView({ potId, userId }) {
