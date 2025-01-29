@@ -38,7 +38,7 @@ export default function Transactions({ data, potId }) {
 
   const filtered = (data?.filter((txn) => txn?.pot_id === potId) || []).slice(
     0,
-    50
+    100
   );
 
   const transactions = transformToTableFormat(filtered);
@@ -84,7 +84,7 @@ export default function Transactions({ data, potId }) {
         </a> */}
       </div>
       <p className="text-gray-500 text-sm mb-2">
-        Only shows the most recent 50. Download all to see all transactions
+        Only shows the most recent 100. Download all to see all transactions
       </p>
 
       <div className="printable-area shadow-xl bg-white rounded-lg p-4">

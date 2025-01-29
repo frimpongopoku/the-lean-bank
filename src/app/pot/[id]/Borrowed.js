@@ -62,10 +62,9 @@ export default function Transactions({ data, potId, payUpIntoSource }) {
     ]);
   };
 
-  const filtered = (data?.filter((txn) => txn?.pot_id === potId) || []).slice(
-    0,
-    50
-  );
+  const filtered = (data?.filter((txn) => txn?.pot_id === potId) || [])
+    .reverse()
+    .slice(0, 100);
   const borrows = transformToTableFormat(filtered);
 
   const tableHeadings = [
@@ -110,7 +109,7 @@ export default function Transactions({ data, potId, payUpIntoSource }) {
         </a> */}
       </div>
       <p className="text-gray-500 text-sm mb-2">
-        Only shows the most recent 50. Download all to see all borrowed
+        Only shows the most recent 100. Download all to see all borrowed
         transactions
       </p>
 
