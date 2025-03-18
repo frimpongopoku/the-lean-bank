@@ -5,21 +5,13 @@ import { useModal } from "./components/EBModal";
 import PayUpConfirmation from "./components/PayUpConfirmation";
 import { useBorrow } from "@/app/hooks/contexts/useBorrow";
 import { formatDateTime, generatePDF } from "@/app/lib/utils";
+import { useState } from "react";
 
 export default function Transactions({ data, potId, payUpIntoSource }) {
   const { Modal, openModal, closeModal } = useModal();
   const { borrow, markAsPaid } = useBorrow();
+  const [selectedWallet, setSelectedWallet] = useState("");
 
-  // const b = [
-  //   {
-  //     date: "2nd January 2025",
-  //     type: "Deposit",
-  //     amount: 500,
-  //     source: "Savings",
-  //     source_id: "part_savings001",
-  //     description: "New Fibre Installations",
-  //   },
-  // ];
   const payUp = (data) => {
     openModal(
       <PayUpConfirmation
@@ -53,7 +45,6 @@ export default function Transactions({ data, potId, payUpIntoSource }) {
 
   const transformToTableFormat = (b) => {
     return b.map((txn) => [
-      // { value: txn.id },
       { value: txn.source },
       { func: () => renderAmount(txn) },
       { value: formatDateTime(txn.date) },
@@ -63,8 +54,10 @@ export default function Transactions({ data, potId, payUpIntoSource }) {
   };
 
   const filtered = (data?.filter((txn) => txn?.pot_id === potId) || [])
+    .filter((txn) => (selectedWallet ? txn.source === selectedWallet : true))
     .reverse()
     .slice(0, 100);
+
   const borrows = transformToTableFormat(filtered);
 
   const tableHeadings = [
@@ -75,21 +68,19 @@ export default function Transactions({ data, potId, payUpIntoSource }) {
     "Action",
   ];
 
+  const uniqueWallets = [
+    ...new Set(data?.map((txn) => txn.source).filter(Boolean)),
+  ];
+
+  const totalAmount = filtered.reduce(
+    (sum, txn) => sum + (Number(txn.amount) || 0),
+    0
+  );
+
   return (
     <div className="py-8">
       <Modal />
       <h1 className="text-2xl font-bold mb-4">Borrows</h1>
-
-      {/* <div className="flex gap-4 mb-6">
-        <select className="border p-2 rounded">
-          <option>LTF</option>
-        </select>
-        <input type="date" className="border p-2 rounded" />
-        <input type="date" className="border p-2 rounded" />
-        <button className="bg-black text-white px-4 py-2 rounded flex items-center gap-2">
-          <FontAwesomeIcon icon={faSearch} /> Search
-        </button>
-      </div> */}
 
       <div className="flex gap-4 mb-4">
         <button
@@ -104,16 +95,34 @@ export default function Transactions({ data, potId, payUpIntoSource }) {
         >
           <FontAwesomeIcon icon={faDownload} /> Download All
         </button>
-        {/* <a href="#" className="text-green-600 font-bold">
-          Show All
-        </a> */}
       </div>
       <p className="text-gray-500 text-sm mb-2">
         Only shows the most recent 100. Download all to see all borrowed
         transactions
       </p>
 
-      <div className=" printable-borrowed-area shadow-xl bg-white rounded-lg p-4">
+      <div className="mb-4 flex flex-row items-center ">
+        <div className="flex gap-4  mr-2">
+          <select
+            className="border p-2 rounded"
+            value={selectedWallet}
+            onChange={(e) => setSelectedWallet(e.target.value)}
+          >
+            <option value="">All Wallets</option>
+            {uniqueWallets.map((wallet) => (
+              <option key={wallet} value={wallet}>
+                {wallet}
+              </option>
+            ))}
+          </select>
+        </div>
+        <p className="text-lg font-semibold">
+          Total Amount:{" "}
+          <span className="text-red-600">¢{totalAmount?.toFixed(2)}</span>
+        </p>
+      </div>
+
+      <div className="printable-borrowed-area shadow-xl bg-white rounded-lg p-4">
         <TransactionsTable
           data={borrows}
           head={tableHeadings}

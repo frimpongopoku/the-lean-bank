@@ -292,7 +292,7 @@ function OnePotView({ potId, userId }) {
                 <p
                   className={`${
                     checkSumIsValid ? "text-green-500" : "text-red-500"
-                  } flex flex-col ml-2 text-3xl mr-2   cursor-pointer`}
+                  } flex flex-col ml-2 text-3xl mr-2 cursor-pointer`}
                 >
                   <span className="hover:underline" onClick={summarizeChecksum}>
                     {checkSumIsValid ? "Valid" : "Invalid"}
