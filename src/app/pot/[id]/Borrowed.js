@@ -6,6 +6,7 @@ import PayUpConfirmation from "./components/PayUpConfirmation";
 import { useBorrow } from "@/app/hooks/contexts/useBorrow";
 import { formatDateTime, generatePDF } from "@/app/lib/utils";
 import { useState } from "react";
+import { saveAs } from "file-saver";
 
 export default function Transactions({ data, potId, payUpIntoSource }) {
   const { Modal, openModal, closeModal } = useModal();
@@ -77,6 +78,23 @@ export default function Transactions({ data, potId, payUpIntoSource }) {
     0
   );
 
+  const downloadAsCSV = () => {
+    const csvContent = [
+      ["Wallet Source", "Amount", "Date", "Description", "Paid"],
+      ...filtered.map((txn) => [
+        txn.source,
+        txn.amount,
+        formatDateTime(txn.date),
+        txn.description,
+        txn.paid ? "Yes" : "No",
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    saveAs(blob, `${formatDateTime(new Date())}-borrows.csv`);
+  };
   return (
     <div className="py-8">
       <Modal />
@@ -93,7 +111,13 @@ export default function Transactions({ data, potId, payUpIntoSource }) {
           }
           className="text-green-600 font-bold cursor-pointer"
         >
-          <FontAwesomeIcon icon={faDownload} /> Download All
+          <FontAwesomeIcon icon={faDownload} /> Download All as PDF
+        </button>
+        <button
+          onClick={() => downloadAsCSV()}
+          className="text-green-600 font-bold cursor-pointer"
+        >
+          <FontAwesomeIcon icon={faDownload} /> Download as CSV
         </button>
       </div>
       <p className="text-gray-500 text-sm mb-2">
