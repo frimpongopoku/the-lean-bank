@@ -58,7 +58,7 @@ function OnePotView({ potId, userId }) {
   const { borrows, addBorrow, setBorrows } = useBorrow();
 
   const pots = potData?.pots || [];
-  const targetPot = pots.find((pot) => pot.id?.toString() === potId);
+  const targetPot = useMemo(()=>pots.find((pot) => pot.id?.toString() === potId,[]),[pots,potId]);
 
   const editPotContent = () => {
     openModal(
@@ -83,6 +83,13 @@ function OnePotView({ potId, userId }) {
       setBorrows(BORROWED);
     });
   }, [userId]);
+
+  useEffect(() => { 
+
+    if (targetPot?.name) {
+      document.title = `${targetPot.name} | The Lean Bank`;
+    }
+  },[targetPot]);
 
   const { name, parts, balance } = targetPot || {};
 
