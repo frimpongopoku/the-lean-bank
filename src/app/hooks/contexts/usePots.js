@@ -157,15 +157,31 @@ export const PotsProvider = ({ children }) => {
               ? { ...part, balance: Number(part.balance) - amount }
               : part
           );
-
           return {
             ...pot,
             balance: Number(pot.balance) - amount,
             parts: updatedParts,
           };
         }
-        console.log("Lets see POT", pot);
         return pot;
+      }),
+    }));
+  };
+
+  // Internal transfer: moves amount between two partitions without changing pot balance
+  const transferBetweenPartitions = (potId, fromPartId, toPartId, amount) => {
+    setPotData((prevPotData) => ({
+      ...prevPotData,
+      pots: prevPotData.pots.map((pot) => {
+        if (pot.id !== potId) return pot;
+        const updatedParts = pot.parts.map((part) => {
+          if (part.id === fromPartId)
+            return { ...part, balance: Number(part.balance) - amount };
+          if (part.id === toPartId)
+            return { ...part, balance: Number(part.balance) + amount };
+          return part;
+        });
+        return { ...pot, parts: updatedParts };
       }),
     }));
   };
@@ -183,6 +199,7 @@ export const PotsProvider = ({ children }) => {
         updatePartInPot,
         updatePotWithDeposit,
         updatePotWithWithdrawal,
+        transferBetweenPartitions,
       }}
     >
       {children}

@@ -1,4 +1,3 @@
-// components/Fallback.js
 "use client";
 import { useRouter } from "next/navigation";
 import PropTypes from "prop-types";
@@ -10,26 +9,24 @@ import {
 
 const Fallback = ({ message = "Something went wrong.", backUrl = "/" }) => {
   const router = useRouter();
-
   const handleGoBack = () => {
     if (backUrl) return router.push(backUrl);
     router.back();
   };
 
   return (
-    <div className="flex items-center justify-center h-screen  bg-gray-100">
-      <div className="text-center flex flex-col items-center p-6 bg-white rounded shadow-md w-1/4">
-        <FontAwesomeIcon
-          icon={faExclamationTriangle}
-          className="text-yellow-500 text-4xl mb-4"
-        />
-        <h1 className="text-xl font-semibold mb-2">Oops!</h1>
-        <p className="text-gray-700 mb-4">{message}</p>
-        <button
-          onClick={handleGoBack}
-          className="flex items-center px-4 py-2 bg-blue-500 text-white font-medium rounded hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300"
-        >
-          <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
+    <div className="flex items-center justify-center h-screen">
+      <div className="glass text-center flex flex-col items-center px-10 py-12 max-w-sm w-full animate-scale-in">
+        <div className="w-14 h-14 rounded-full bg-brand-amber/10 flex items-center justify-center mb-5">
+          <FontAwesomeIcon
+            icon={faExclamationTriangle}
+            className="text-brand-amber text-xl"
+          />
+        </div>
+        <h1 className="text-xl font-bold text-white mb-2">Oops!</h1>
+        <p className="text-text-muted mb-7 text-sm leading-relaxed">{message}</p>
+        <button onClick={handleGoBack} className="btn-ghost text-sm">
+          <FontAwesomeIcon icon={faArrowLeft} />
           Go Back
         </button>
       </div>

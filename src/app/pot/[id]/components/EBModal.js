@@ -15,28 +15,47 @@ export function useModal() {
     setIsOpen(false);
   }, []);
 
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") closeModal();
+    };
+    if (isOpen) document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isOpen, closeModal]);
+
   const Modal = useCallback(
     ({ closeOnOverlayClick = true }) => {
       if (!isOpen) return null;
 
       const handleOverlayClick = (e) => {
-        if (e.target === e.currentTarget && closeOnOverlayClick) {
-          closeModal();
-        }
+        if (e.target === e.currentTarget && closeOnOverlayClick) closeModal();
       };
 
       return createPortal(
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          onClick={handleOverlayClick}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{
-            animation: "fadeIn 0.3s ease-out",
+            background: "rgba(4,9,20,0.75)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            animation: "fadeIn 0.2s ease-out",
           }}
+          onClick={handleOverlayClick}
         >
           <div
-            className=" m-4 bg-white rounded-lg p-4 transform transition-transform duration-300"
             style={{
-              animation: "scaleIn 0.3s ease-out",
+              background: "rgba(10,18,38,0.92)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "20px",
+              backdropFilter: "blur(24px)",
+              WebkitBackdropFilter: "blur(24px)",
+              boxShadow:
+                "0 24px 80px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.06)",
+              animation: "scaleIn 0.25s ease-out",
+              maxWidth: "520px",
+              width: "100%",
+              maxHeight: "90vh",
+              overflowY: "auto",
             }}
           >
             {content}
@@ -50,22 +69,3 @@ export function useModal() {
 
   return { Modal, openModal, closeModal };
 }
-
-// Add fade and scale animations
-const styles = document.createElement("style");
-styles.textContent = `
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes scaleIn {
-  from { transform: scale(0.95); }
-  to { transform: scale(1); }
-}`;
-document.head.appendChild(styles);
-
-// Usage Example:
-// const { Modal, openModal, closeModal } = useModal();
-// <button onClick={() => openModal(<YourComponent />)}>Open Modal</button>
-// <Modal closeOnOverlayClick={true} />

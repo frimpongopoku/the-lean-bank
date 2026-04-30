@@ -1,4 +1,3 @@
-// components/InputField.js
 import PropTypes from "prop-types";
 
 const InputField = ({
@@ -13,47 +12,31 @@ const InputField = ({
   placeholder,
 }) => {
   const labelJsx = (
-    <label
-      className="block text-gray-700 text-sm font-bold mb-2"
-      htmlFor={label}
-    >
-      {label} {required && <span className="text-red-500">*</span>}
+    <label className="block text-white/60 text-xs font-semibold mb-2 uppercase tracking-wider" htmlFor={name}>
+      {label}
+      {required && <span className="text-brand-rose ml-1">*</span>}
     </label>
   );
 
-  if (textarea)
-    return (
-      <div className="mb-4">
-        {labelJsx}
-        <textarea
-          placeholder={placeholder}
-          name={name}
-          id={label}
-          type={type}
-          value={value}
-          onChange={onChange}
-          maxLength={maxLength}
-          required={required}
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-        >
-          {placeholder || ""}
-        </textarea>
-      </div>
-    );
+  const sharedProps = {
+    id: name,
+    name,
+    value: value ?? "",
+    onChange,
+    maxLength,
+    required,
+    placeholder: placeholder || "",
+    className: "input-glass",
+  };
+
   return (
     <div className="mb-4">
       {labelJsx}
-      <input
-        placeholder={placeholder}
-        name={name}
-        id={label}
-        type={type}
-        value={value || ""}
-        onChange={onChange}
-        maxLength={maxLength}
-        required={required}
-        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-      />
+      {textarea ? (
+        <textarea {...sharedProps} rows={3} />
+      ) : (
+        <input {...sharedProps} type={type} />
+      )}
     </div>
   );
 };
@@ -61,7 +44,7 @@ const InputField = ({
 InputField.propTypes = {
   label: PropTypes.string.isRequired,
   type: PropTypes.string,
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   onChange: PropTypes.func.isRequired,
   maxLength: PropTypes.number,
   required: PropTypes.bool,

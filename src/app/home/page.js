@@ -4,18 +4,24 @@ import PotHome from "./PotHome";
 import { TransactionProvider } from "../hooks/contexts/useTransactions";
 import { AuthProvider } from "../auth/context/AuthContext";
 import AuthGuard from "../auth/AuthGuard";
+import { ToastProvider } from "../components/ToastProvider";
+import ErrorBoundary from "../components/ErrorBoundary";
 
 function HomeServerEntry() {
   return (
-    <PotsProvider>
-      <TransactionProvider>
+    <ErrorBoundary>
+      <ToastProvider>
         <AuthProvider>
-          <AuthGuard>
-            <PotHome />
-          </AuthGuard>
+          <PotsProvider>
+            <TransactionProvider>
+              <AuthGuard>
+                <PotHome />
+              </AuthGuard>
+            </TransactionProvider>
+          </PotsProvider>
         </AuthProvider>
-      </TransactionProvider>
-    </PotsProvider>
+      </ToastProvider>
+    </ErrorBoundary>
   );
 }
 

@@ -1,4 +1,3 @@
-// forms/CreateOrEditPartition.js
 import { useEffect, useState } from "react";
 import InputField from "./InputField";
 import SubmitButton from "./SubmitButton";
@@ -7,7 +6,7 @@ const CreateOrEditPartition = ({ onSubmit, mode = "create", data }) => {
   const [formData, setFormData] = useState({
     name: "",
     abbreviation: "",
-    amount: "",
+    balance: "",
     description: "",
   });
 
@@ -28,17 +27,21 @@ const CreateOrEditPartition = ({ onSubmit, mode = "create", data }) => {
   }, [data?.toString()]);
 
   return (
-    <div>
-      <div className="px-4">
-        <h2 className="font-bold text-lg">Create New</h2>
-        <p className="text-gray-500">
-          Fill in the form below to create a new partition
+    <div className="p-6 min-w-[320px]">
+      <div className="mb-6">
+        <h2 className="font-bold text-lg text-white">
+          {isEdit ? "Edit Partition" : "New Partition"}
+        </h2>
+        <p className="text-white/50 text-sm mt-1">
+          {isEdit
+            ? "Update the details for this partition"
+            : "Create a new wallet inside this pot"}
         </p>
       </div>
-      <form onSubmit={handleSubmit} className="max-w-lg mx-auto p-4 w-[500]">
+      <form onSubmit={handleSubmit} className="space-y-1">
         <InputField
           label="Name"
-          placeholder="Enter name..."
+          placeholder="e.g. Emergency Fund"
           name="name"
           value={formData.name}
           onChange={handleChange}
@@ -46,8 +49,8 @@ const CreateOrEditPartition = ({ onSubmit, mode = "create", data }) => {
           required
         />
         <InputField
-          label="Abbreviation"
-          placeholder="(optional)Add an abbreviation..."
+          label="Abbreviation (optional)"
+          placeholder="e.g. EMG"
           name="abbreviation"
           value={formData.abbreviation}
           onChange={handleChange}
@@ -55,7 +58,7 @@ const CreateOrEditPartition = ({ onSubmit, mode = "create", data }) => {
         />
         <InputField
           label="Amount"
-          placeholder="Enter amount"
+          placeholder="0.00"
           name="balance"
           type="number"
           value={formData.balance}
@@ -64,14 +67,17 @@ const CreateOrEditPartition = ({ onSubmit, mode = "create", data }) => {
         />
         {isEdit && (
           <InputField
-            label="Description (reason for edit)"
+            label="Reason for edit"
             name="description"
-            placeholder="Enter description..."
+            placeholder="Why are you changing this?"
             value={formData.description}
             onChange={handleChange}
+            textarea
           />
         )}
-        <SubmitButton text={!isEdit ? "Create" : "Save"} />
+        <div className="pt-2">
+          <SubmitButton text={isEdit ? "Save Changes" : "Create Partition"} />
+        </div>
       </form>
     </div>
   );

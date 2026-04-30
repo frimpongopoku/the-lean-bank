@@ -57,6 +57,19 @@ export const BorrowProvider = ({ children }) => {
     updateBorrow(id, { paid: true });
   };
 
+  // Record a (partial) repayment; marks paid:true when fully settled
+  const recordRepayment = (id, amount) => {
+    setBorrowState((prevState) => ({
+      ...prevState,
+      borrows: prevState.borrows.map((borrow) => {
+        if (borrow.id !== id) return borrow;
+        const newPaidAmount = Number(borrow.paid_amount || 0) + amount;
+        const fullyPaid = newPaidAmount >= Number(borrow.amount);
+        return { ...borrow, paid_amount: newPaidAmount, paid: fullyPaid };
+      }),
+    }));
+  };
+
   return (
     <BorrowContext.Provider
       value={{
@@ -68,6 +81,7 @@ export const BorrowProvider = ({ children }) => {
         deleteBorrow,
         getBorrowById,
         markAsPaid,
+        recordRepayment,
       }}
     >
       {children}

@@ -4,25 +4,25 @@ import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
 const MaskNumber = ({ number, className }) => {
   const [isVisible, setIsVisible] = useState(false);
-
-  // Convert number to string to calculate length
-  const numberString = number.toString();
+  const str = String(number ?? "0");
 
   return (
-    <span className={`flex items-center space-x-2 flex-row  `}>
-      <span className={`font-bold ${className || ""}`}>
-        {isVisible ? numberString : ".".repeat(numberString.length)}
+    <span className={`inline-flex items-center gap-2 ${className || ""}`}>
+      <span className="font-bold tabular-nums">
+        {isVisible ? str : "•".repeat(Math.min(str.length, 8))}
       </span>
-      {/* <span
-        onClick={() => setIsVisible(!isVisible)}
-        className="focus:outline-none cursor-pointer hover:text-green-600"
-      > */}
-      <FontAwesomeIcon
-        onClick={() => setIsVisible(!isVisible)}
-        icon={isVisible ? faEye : faEyeSlash}
-        className={`text-gray-400 text-lg cursor-pointer hover:text-green-600 ${className}`}
-      />
-      {/* </span> */}
+      <button
+        type="button"
+        onClick={() => setIsVisible((v) => !v)}
+        aria-label={isVisible ? "Hide amount" : "Show amount"}
+        aria-pressed={isVisible}
+        className="text-white/30 hover:text-white/70 transition-colors cursor-pointer focus:outline-none"
+      >
+        <FontAwesomeIcon
+          icon={isVisible ? faEye : faEyeSlash}
+          className="text-sm"
+        />
+      </button>
     </span>
   );
 };

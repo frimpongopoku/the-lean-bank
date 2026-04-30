@@ -1,10 +1,6 @@
-// components/SubmitButton.js
-const SubmitButton = ({ text }) => {
+const SubmitButton = ({ text = "Submit" }) => {
   return (
-    <button
-      type="submit"
-      className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-    >
+    <button type="submit" className="btn-primary w-full justify-center mt-2">
       {text}
     </button>
   );

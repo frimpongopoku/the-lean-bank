@@ -1,6 +1,4 @@
-// forms/SpendForm.js
 import { useState } from "react";
-
 import InputField from "./InputField";
 import SubmitButton from "./SubmitButton";
 
@@ -8,6 +6,7 @@ const SpendForm = ({
   onSubmit,
   title = "Spend",
   subtitle = "How much did you spend?",
+  accentColor = "brand-rose",
 }) => {
   const [formData, setFormData] = useState({ amount: "", description: "" });
 
@@ -22,14 +21,14 @@ const SpendForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-lg mx-auto p-4 w-[500]">
-      <div className="mb-4">
-        {title && <h2 className="font-bold text-lg">{title}</h2>}
-        {subtitle && <p className="text-gray-500">{subtitle}</p>}
+    <form onSubmit={handleSubmit} className="p-6 w-full min-w-[320px]">
+      <div className="mb-6">
+        <h2 className="font-bold text-lg text-white">{title}</h2>
+        <p className="text-white/50 text-sm mt-1">{subtitle}</p>
       </div>
       <InputField
         label="Amount"
-        placeholder={`Enter amount...`}
+        placeholder="0.00"
         type="number"
         name="amount"
         value={formData.amount}
@@ -39,12 +38,12 @@ const SpendForm = ({
       <InputField
         textarea
         name="description"
-        placeholder={`Enter description...`}
+        placeholder="What's this for?"
         label="Description"
         value={formData.description}
         onChange={handleChange}
       />
-      <SubmitButton text="Submit" />
+      <SubmitButton text="Confirm" />
     </form>
   );
 };

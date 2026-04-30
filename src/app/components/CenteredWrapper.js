@@ -2,8 +2,8 @@ import React from "react";
 
 function CenteredWrapper({ children }) {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="p-6 w-full max-w-4xl">{children}</div>
+    <div className="flex items-start justify-center min-h-screen">
+      <div className="p-4 sm:p-6 w-full max-w-5xl">{children}</div>
     </div>
   );
 }
