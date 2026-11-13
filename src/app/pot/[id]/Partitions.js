@@ -1,293 +1,175 @@
-import {
-  faEdit,
-  faPlus,
-  faTrash,
-  faWallet,
-  faArrowDown,
-  faArrowUp,
-  faHandHoldingDollar,
-  faRightLeft,
-} from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React from "react";
-import { useModal } from "./components/EBModal";
-import DepositForm from "../forms/DepositForm";
-import SpendForm from "../forms/SpendForm";
-import BorrowForm from "../forms/BorrowForm";
-import WalletDeleteConfirmation from "./components/WalletDeleteConfirmation";
-import { makeDate } from "@/app/lib/utils";
-import MaskNumber from "@/app/components/MaskNumber";
+"use client";
+import React, { useMemo, useState } from "react";
+import Icon from "@/app/components/ui/Icon";
+import Menu from "@/app/components/ui/Menu";
+import { Money, partColor, isIn, isMove, shortDate } from "@/app/components/ui/money";
 
-function Partitions({
-  data,
-  pot,
-  totalSum,
-  editPartition,
-  onRemove,
-  createPartition,
-  createDeposit,
-  createWithdrawal,
-  doBorrow,
-  doTransfer,
-}) {
-  const { Modal, openModal, closeModal } = useModal();
+const SORTS = [
+  { id: "order", label: "Your order" },
+  { id: "largest", label: "Largest first" },
+  { id: "recent", label: "Recently used" },
+  { id: "az", label: "A–Z" },
+];
 
-  const deposit = (partition) => {
-    openModal(
-      <DepositForm
-        onSubmit={(content) => { createDeposit(content, partition); closeModal(); }}
-      />
+/* The Envelopes tab: one dense row per envelope; actions appear on hover/focus (always on touch). */
+export default function Envelopes({ parts, txns, assigned, onCreate, onEdit, onDelete, onRecord }) {
+  const [sort, setSort] = useState("order");
+
+  const lastByPart = useMemo(() => {
+    const map = {};
+    for (const t of txns) {
+      if (t.part_id && !map[t.part_id]) map[t.part_id] = t;
+    }
+    return map;
+  }, [txns]);
+
+  const rows = useMemo(() => {
+    const list = parts.map((p, i) => ({ ...p, _i: i, _last: lastByPart[p.id] }));
+    if (sort === "largest") list.sort((a, b) => (Number(b.balance) || 0) - (Number(a.balance) || 0));
+    if (sort === "az") list.sort((a, b) => String(a.name).localeCompare(String(b.name)));
+    if (sort === "recent") list.sort((a, b) => (b._last?._d?.getTime() || 0) - (a._last?._d?.getTime() || 0));
+    return list;
+  }, [parts, sort, lastByPart]);
+
+  if (!parts.length) {
+    return (
+      <div className="card px-6 py-12 flex flex-col items-center text-center gap-3">
+        <span className="w-11 h-11 rounded-full bg-raised text-muted inline-flex items-center justify-center">
+          <Icon name="wallet" size={20} />
+        </span>
+        <h2 className="m-0 text-base font-semibold">No envelopes yet</h2>
+        <p className="m-0 text-muted max-w-[40ch]">
+          Split this pot by purpose: Rent, Food, Savings. Each envelope tracks what it holds and what moves in and out.
+        </p>
+        <button type="button" className="btn-primary mt-2" onClick={onCreate}>
+          <Icon name="plus" />
+          Create an envelope
+        </button>
+      </div>
     );
-  };
-
-  const spend = (partition) => {
-    openModal(
-      <SpendForm
-        onSubmit={(content) => { createWithdrawal(content, partition); closeModal(); }}
-      />
-    );
-  };
-
-  const borrow = (partition) => {
-    openModal(
-      <BorrowForm
-        onSubmit={(content) => {
-          doBorrow(
-            { ...content, source: partition?.name, source_id: partition?.id, paid: false, date: makeDate() },
-            partition
-          );
-          closeModal();
-        }}
-      />
-    );
-  };
-
-  const remove = (id) => {
-    openModal(
-      <WalletDeleteConfirmation
-        onCancel={closeModal}
-        onConfirm={() => { onRemove(id); closeModal(); }}
-      />
-    );
-  };
+  }
 
   return (
-    <div className="py-4">
-      <Modal />
-
-      {/* Summary row */}
-      {totalSum > 0 && (
-        <div className="flex items-center justify-between mb-4 px-1">
-          <span className="text-white/40 text-xs uppercase tracking-wider font-semibold">
-            Total allocated
-          </span>
-          <MaskNumber
-            number={Number(totalSum)?.toLocaleString()}
-            className="text-brand-emerald font-bold text-lg"
-          />
-        </div>
-      )}
-
-      {/* Empty state */}
-      {!data?.length && (
-        <div className="glass text-center py-12 px-6">
-          <div className="w-12 h-12 rounded-xl bg-brand-violet/10 flex items-center justify-center mx-auto mb-3">
-            <FontAwesomeIcon icon={faWallet} className="text-brand-violet text-lg" />
-          </div>
-          <h3 className="text-white font-semibold mb-1">No partitions yet</h3>
-          <p className="text-white/40 text-sm mb-5">
-            Slice your pot into purpose-built envelopes — savings, rent, fun money, anything.
-          </p>
-          <button onClick={createPartition} className="btn-primary text-sm">
-            <FontAwesomeIcon icon={faPlus} />
-            Create first partition
-          </button>
-        </div>
-      )}
-
-      {/* Partition cards */}
-      <div className="space-y-3">
-        {data?.map((partition) => (
-          <PartitionCard
-            key={partition.id}
-            partition={partition}
-            potBalance={pot?.balance}
-            totalSum={totalSum}
-            onDeposit={() => deposit(partition)}
-            onSpend={() => spend(partition)}
-            onBorrow={() => borrow(partition)}
-            onTransfer={() => doTransfer && doTransfer(partition)}
-            onRemove={() => remove(partition.id)}
-            onEdit={() => editPartition(partition)}
-          />
-        ))}
+    <section aria-label="Envelopes" className="flex flex-col gap-3">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <label className="inline-flex items-center gap-2 text-[13px] text-muted">
+          Sort
+          <select className="field !h-9 !w-auto !text-[13px] sm:!text-[13px]" value={sort} onChange={(e) => setSort(e.target.value)}>
+            {SORTS.map((s) => (
+              <option key={s.id} value={s.id}>{s.label}</option>
+            ))}
+          </select>
+        </label>
+        <button type="button" className="btn-ghost !h-9" onClick={onCreate}>
+          <Icon name="plus" />
+          New envelope
+        </button>
       </div>
-    </div>
+
+      <div className="card">
+        <div className="hidden md:grid grid-cols-[minmax(0,1.5fr)_minmax(0,1.3fr)_110px_150px_116px] gap-4 px-5 pt-3.5 pb-2.5 text-xs text-faint">
+          <span>Envelope</span>
+          <span>Last movement</span>
+          <span>Share</span>
+          <span className="text-right">Balance</span>
+          <span className="sr-only">Actions</span>
+        </div>
+        <ul className="list-none m-0 p-0">
+          {rows.map((p, n) => (
+            <EnvelopeRow
+              key={p.id}
+              part={p}
+              first={n === 0}
+              color={partColor(p._i)}
+              share={assigned > 0 ? Math.max(0, (Number(p.balance) || 0) / assigned) : 0}
+              onRecord={(mode) => onRecord(mode, p)}
+              onEdit={() => onEdit(p)}
+              onDelete={() => onDelete(p)}
+            />
+          ))}
+        </ul>
+      </div>
+    </section>
   );
 }
 
-const PartitionCard = ({
-  partition,
-  potBalance,
-  totalSum,
-  onDeposit,
-  onSpend,
-  onBorrow,
-  onTransfer,
-  onRemove,
-  onEdit,
-}) => {
-  const { name, balance, abbreviation } = partition;
-  const pct =
-    totalSum > 0
-      ? Math.min((Number(balance) / totalSum) * 100, 100)
-      : 0;
+function LastMovement({ t }) {
+  if (!t) return <span className="text-faint">No activity yet</span>;
+  const move = isMove(t);
+  const loan = t.kind === "loan" || /^Borrowed:/.test(t.description || "");
+  const incoming = isIn(t);
+  const verb = move ? (incoming ? "Moved in" : "Moved out") : loan ? "Lent" : incoming ? "In" : "Out";
+  return (
+    <span className="truncate">
+      {verb} <Money value={t.amount} className="text-ink-2" /> · {shortDate(t._d)}
+    </span>
+  );
+}
+
+function EnvelopeRow({ part, first, color, share, onRecord, onEdit, onDelete }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const pct = Math.round(share * 100);
+  const negative = Number(part.balance) < 0;
+
+  const moreItems = [
+    { label: "Lend out", icon: "loan", onSelect: () => onRecord("lend") },
+    { label: "Move to another envelope", icon: "move", onSelect: () => onRecord("move") },
+    { divider: true },
+    { label: "Edit envelope", icon: "edit", onSelect: onEdit },
+    { label: "Delete envelope", icon: "trash", tone: "danger", onSelect: onDelete },
+  ];
 
   return (
-    <div
-      className="rounded-2xl p-4 sm:p-5 transition-all duration-200"
-      style={{
-        background: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.07)",
-      }}
-      onMouseOver={(e) => {
-        e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.11)";
-      }}
-      onMouseOut={(e) => {
-        e.currentTarget.style.background = "rgba(255,255,255,0.04)";
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)";
-      }}
+    <li
+      className={`reveal-row grid grid-cols-[minmax(0,1fr)_auto_auto] md:grid-cols-[minmax(0,1.5fr)_minmax(0,1.3fr)_110px_150px_116px] items-center gap-x-3 md:gap-x-4 px-4 md:px-5 py-3 ${
+        first ? "" : "border-t border-line"
+      } ${menuOpen ? "bg-surface-2" : ""}`}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        {/* Left: identity */}
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          {abbreviation && (
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold text-brand-emerald flex-shrink-0"
-              style={{ background: "rgba(16,185,129,0.1)" }}
-            >
-              {abbreviation.slice(0, 3)}
-            </div>
-          )}
-          {!abbreviation && (
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "rgba(255,255,255,0.06)" }}
-            >
-              <FontAwesomeIcon icon={faWallet} className="text-white/35 text-xs" />
-            </div>
-          )}
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="text-white/90 font-semibold text-sm truncate">{name}</p>
-              <button
-                onClick={onEdit}
-                aria-label="Edit partition"
-                className="text-white/25 hover:text-brand-cyan transition-colors flex-shrink-0"
-              >
-                <FontAwesomeIcon icon={faEdit} className="text-xs" />
-              </button>
-            </div>
-            <MaskNumber
-              number={Number(balance)?.toLocaleString()}
-              className="text-xl font-bold text-white"
-            />
-          </div>
-        </div>
-
-        {/* Right: actions */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Primary: Deposit */}
-          <button
-            onClick={onDeposit}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-brand-emerald transition-all duration-150"
-            style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.18)" }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = "rgba(16,185,129,0.18)";
-              e.currentTarget.style.boxShadow = "0 0 16px rgba(16,185,129,0.2)";
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = "rgba(16,185,129,0.1)";
-              e.currentTarget.style.boxShadow = "none";
-            }}
-          >
-            <FontAwesomeIcon icon={faArrowDown} className="text-xs" />
-            Deposit
-          </button>
-
-          {/* Primary: Spend */}
-          <button
-            onClick={onSpend}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-brand-rose transition-all duration-150"
-            style={{ background: "rgba(244,63,94,0.09)", border: "1px solid rgba(244,63,94,0.18)" }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = "rgba(244,63,94,0.17)";
-              e.currentTarget.style.boxShadow = "0 0 16px rgba(244,63,94,0.18)";
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = "rgba(244,63,94,0.09)";
-              e.currentTarget.style.boxShadow = "none";
-            }}
-          >
-            <FontAwesomeIcon icon={faArrowUp} className="text-xs" />
-            Spend
-          </button>
-
-          {/* Secondary: Borrow */}
-          <button
-            onClick={onBorrow}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-brand-amber transition-all duration-150"
-            style={{ background: "rgba(245,158,11,0.09)", border: "1px solid rgba(245,158,11,0.17)" }}
-            onMouseOver={(e) => { e.currentTarget.style.background = "rgba(245,158,11,0.17)"; }}
-            onMouseOut={(e) => { e.currentTarget.style.background = "rgba(245,158,11,0.09)"; }}
-          >
-            <FontAwesomeIcon icon={faHandHoldingDollar} className="text-xs" />
-            Borrow
-          </button>
-
-          {/* Transfer */}
-          <button
-            onClick={onTransfer}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-brand-violet transition-all duration-150"
-            style={{ background: "rgba(167,139,250,0.09)", border: "1px solid rgba(167,139,250,0.17)" }}
-            onMouseOver={(e) => { e.currentTarget.style.background = "rgba(167,139,250,0.17)"; }}
-            onMouseOut={(e) => { e.currentTarget.style.background = "rgba(167,139,250,0.09)"; }}
-          >
-            <FontAwesomeIcon icon={faRightLeft} className="text-xs" />
-            Transfer
-          </button>
-
-          {/* Delete */}
-          <button
-            onClick={onRemove}
-            aria-label="Delete partition"
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-white/20 hover:text-brand-rose hover:bg-brand-rose/10 transition-colors"
-          >
-            <FontAwesomeIcon icon={faTrash} className="text-xs" />
-          </button>
+      <div className="flex items-center gap-3 min-w-0">
+        <span className="w-2.5 h-2.5 rounded-[3px] flex-none" style={{ background: color }} />
+        <div className="min-w-0 flex flex-col">
+          <span className="font-medium truncate">{part.name}</span>
+          <span className="md:hidden text-xs text-muted truncate">
+            <LastMovement t={part._last} />
+          </span>
         </div>
       </div>
 
-      {/* Allocation bar */}
-      {totalSum > 0 && (
-        <div className="mt-4">
-          <div className="flex justify-between text-xs mb-1.5 text-white/30">
-            <span>{pct.toFixed(1)}% of total allocated</span>
-          </div>
-          <div className="alloc-bar-track">
-            <div
-              className="alloc-bar-fill"
-              style={{
-                width: `${pct}%`,
-                background: "linear-gradient(90deg, #a78bfa, #22d3ee)",
-              }}
-            />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+      <span className="hidden md:block text-[13px] text-muted min-w-0 truncate">
+        <LastMovement t={part._last} />
+      </span>
 
-export default Partitions;
+      <div className="hidden md:flex items-center gap-2" title={`${pct}% of what's in envelopes`}>
+        <span className="flex-1 h-1 rounded-full bg-line overflow-hidden">
+          <span className="block h-full" style={{ width: `${pct}%`, background: color }} />
+        </span>
+        <span className="num text-xs text-muted w-9 text-right">{pct}%</span>
+      </div>
+
+      <Money value={part.balance} className={`text-right text-[15px] ${negative ? "text-amber" : ""}`} />
+
+      <div className="row-actions flex justify-end gap-0.5" data-open={menuOpen ? "true" : undefined}>
+        <button type="button" className="icon-btn hidden md:inline-flex" aria-label={`Add money to ${part.name}`} title="Add money" onClick={() => onRecord("add")}>
+          <Icon name="plus" />
+        </button>
+        <button type="button" className="icon-btn hidden md:inline-flex" aria-label={`Spend from ${part.name}`} title="Spend" onClick={() => onRecord("spend")}>
+          <Icon name="minus" />
+        </button>
+        <Menu
+          onOpenChange={setMenuOpen}
+          items={[
+            { label: "Add money", icon: "plus", onSelect: () => onRecord("add"), mobileOnly: true },
+            { label: "Spend", icon: "minus", onSelect: () => onRecord("spend"), mobileOnly: true },
+            ...moreItems,
+          ].filter((i) => !i.mobileOnly || (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches))}
+        >
+          {(p) => (
+            <button {...p} type="button" className="icon-btn md:w-9 w-11 h-11 md:h-9 -mr-2 md:mr-0" aria-label={`More for ${part.name}`}>
+              <Icon name="more" />
+            </button>
+          )}
+        </Menu>
+      </div>
+    </li>
+  );
+}

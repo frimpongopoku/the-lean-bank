@@ -11,7 +11,6 @@ import ErrorBoundary from "@/app/components/ErrorBoundary";
 async function PotView({ params, searchParams }) {
   const { id } = await params;
   const sp = await searchParams;
-  const userId = sp?.c;
 
   return (
     <ErrorBoundary>
@@ -21,7 +20,7 @@ async function PotView({ params, searchParams }) {
             <TransactionProvider>
               <BorrowProvider>
                 <AuthGuard>
-                  <OnePotView potId={id} userId={userId} />
+                  <OnePotView potId={id} userId={sp?.c} initialTab={sp?.tab} focusLoanId={sp?.loan} />
                 </AuthGuard>
               </BorrowProvider>
             </TransactionProvider>

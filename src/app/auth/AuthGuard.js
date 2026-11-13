@@ -3,11 +3,12 @@ import { UNDEFINED, useAuth } from "./context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Loading from "../components/Loading";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRightFromBracket } from "@fortawesome/free-solid-svg-icons";
 
+// Sign out now lives in the header's account menu; `signout` is accepted for
+// backwards compatibility and ignored.
+// eslint-disable-next-line no-unused-vars
 const AuthGuard = ({ children, signout = false }) => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -16,21 +17,7 @@ const AuthGuard = ({ children, signout = false }) => {
 
   if (user === UNDEFINED) return <Loading full />;
 
-  return (
-    <>
-      {children}
-      {signout && (
-        <button
-          onClick={logout}
-          title="Sign out"
-          className="fixed bottom-5 right-5 flex items-center gap-2 text-xs font-semibold text-white/30 hover:text-brand-rose transition-colors duration-200 z-50"
-        >
-          <FontAwesomeIcon icon={faArrowRightFromBracket} />
-          Sign Out
-        </button>
-      )}
-    </>
-  );
+  return <>{children}</>;
 };
 
 export default AuthGuard;

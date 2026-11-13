@@ -40,19 +40,18 @@ const PotsContext = createContext();
 
 export const PotsProvider = ({ children }) => {
   const [potData, setPotData] = useState({ key: UNDEFINED, pots: null });
-  const firstRender = useRef(true);
-  // const searchParams = useSearchParams();
-  // const collectionId = searchParams.get("c"); // Get collection ID from URL
+  const hydrated = useRef(false);
 
-  // Sync potData to Firestore whenever it changes
+  // Sync potData to Firestore whenever it changes. The first value after
+  // loading is what Firestore already holds, so skip writing it back; after
+  // that every change persists, including deleting the last pot.
   useEffect(() => {
-    if (firstRender.current) {
-      firstRender.current = false;
+    if (!potData || potData.key === UNDEFINED || !Array.isArray(potData.pots)) return;
+    if (!hydrated.current) {
+      hydrated.current = true;
       return;
     }
-    if (potData?.pots?.length > 0) {
-      updatePotsInFirestore(potData?.key, potData);
-    }
+    updatePotsInFirestore(potData.key, potData);
   }, [JSON.stringify(potData)]);
 
   const addPot = (newPot) => {

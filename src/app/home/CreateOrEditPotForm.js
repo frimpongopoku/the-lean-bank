@@ -1,95 +1,109 @@
-import React, { useEffect, useState } from "react";
-import InputField from "../pot/forms/InputField";
+"use client";
+import React, { useState } from "react";
+import InputField, { FormHeader, parseAmount } from "../pot/forms/InputField";
 import SubmitButton from "../pot/forms/SubmitButton";
 
 const CURRENCY_KEY = "tlb_default_currency";
 
-function CreateOrEditPotForm({ onSubmit, isEdit, data }) {
-  const defaultCurrency = typeof window !== "undefined"
-    ? localStorage.getItem(CURRENCY_KEY) || ""
-    : "";
-
-  const [formData, setFormData] = useState({
-    name: "",
-    currency: isEdit ? "" : defaultCurrency,
-    balance: "",
-    description: "",
+function CreateOrEditPotForm({ onSubmit, isEdit, data, onClose, focus }) {
+  const [form, setForm] = useState(() => {
+    let currency = "";
+    try {
+      currency = localStorage.getItem(CURRENCY_KEY) || "";
+    } catch {}
+    return {
+      name: data?.name ?? "",
+      currency: data?.currency ?? currency,
+      balance: data?.balance !== undefined && data?.balance !== null ? String(data.balance) : "",
+      description: data?.description ?? "",
+    };
   });
+  const [errors, setErrors] = useState({});
 
-  const handleChange = (e) => {
+  const set = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setForm((f) => ({ ...f, [name]: name === "currency" ? value.toUpperCase() : value }));
+    if (errors[name]) setErrors((x) => ({ ...x, [name]: undefined }));
   };
 
-  const handleSubmit = (e) => {
+  const submit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    const next = {};
+    const balance = parseAmount(form.balance);
+    if (!form.name.trim()) next.name = "Give the pot a name.";
+    if (!Number.isFinite(balance)) next.balance = "Enter the amount, e.g. 2,500.00";
+    setErrors(next);
+    if (Object.keys(next).length) return;
+    onSubmit({
+      ...(data || {}),
+      name: form.name.trim(),
+      currency: form.currency.trim(),
+      balance,
+      description: form.description.trim(),
+    });
   };
-
-  useEffect(() => {
-    if (data) setFormData(data);
-  }, [data?.toString()]);
 
   return (
-    <div className="p-6 min-w-[320px]">
-      <div className="mb-6">
-        <h2 className="font-bold text-lg text-white">
-          {isEdit ? "Edit Pot" : "New Pot"}
-        </h2>
-        <p className="text-white/50 text-sm mt-1">
-          {isEdit
-            ? "Update your pot details"
-            : "How much do you have in this account right now?"}
-        </p>
-      </div>
-      <form onSubmit={handleSubmit} className="space-y-1">
+    <form onSubmit={submit} noValidate>
+      <FormHeader
+        title={isEdit ? "Edit pot" : "New pot"}
+        subtitle={isEdit ? "Rename it or correct the balance." : "A bank account, wallet or cash stash you want to split into envelopes."}
+        onClose={onClose}
+      />
+      <div className="px-5 sm:px-6 py-5 flex flex-col gap-4">
         <InputField
           label="Name"
           name="name"
-          type="text"
-          value={formData.name}
-          onChange={handleChange}
+          value={form.name}
+          onChange={set}
           placeholder="e.g. GCB Savings"
           maxLength={40}
           required
+          autoFocus={focus !== "balance"}
+          error={errors.name}
+          autoComplete="off"
+          enterKeyHint="next"
         />
-        <InputField
-          label="Currency"
-          name="currency"
-          type="text"
-          value={formData.currency}
-          onChange={handleChange}
-          placeholder="e.g. GHS"
-          maxLength={3}
-        />
-        <InputField
-          label="Balance"
-          name="balance"
-          type="number"
-          value={formData.balance}
-          onChange={handleChange}
-          placeholder="0.00"
-          required
-        />
+        <div className="grid grid-cols-[110px_minmax(0,1fr)] gap-3">
+          <InputField
+            label="Currency"
+            name="currency"
+            value={form.currency}
+            onChange={set}
+            placeholder="GHS"
+            maxLength={3}
+            required
+            autoCapitalize="characters"
+            autoComplete="off"
+          />
+          <InputField
+            label={isEdit ? "Balance in the account" : "Balance right now"}
+            name="balance"
+            inputMode="decimal"
+            value={form.balance}
+            onChange={set}
+            placeholder="0.00"
+            required
+            autoFocus={focus === "balance"}
+            error={errors.balance}
+            autoComplete="off"
+          />
+        </div>
         {isEdit && (
-          <p className="text-white/30 text-xs px-1">
-            Balance changes are recorded as adjustment transactions.
-          </p>
+          <p className="m-0 -mt-1 text-[13px] text-muted">A change to the balance is logged in Activity as an adjustment.</p>
         )}
         <InputField
           textarea
-          label="Description (optional)"
+          label="Note"
           name="description"
-          value={formData.description}
-          onChange={handleChange}
+          value={form.description}
+          onChange={set}
           placeholder="What is this account for?"
           maxLength={100}
         />
-        <div className="pt-2">
-          <SubmitButton text={isEdit ? "Save Changes" : "Create Pot"} />
-        </div>
-      </form>
-    </div>
+        <SubmitButton text={isEdit ? "Save changes" : "Create pot"} />
+      </div>
+    </form>
   );
 }
 

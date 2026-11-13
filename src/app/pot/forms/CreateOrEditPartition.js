@@ -1,85 +1,105 @@
-import { useEffect, useState } from "react";
-import InputField from "./InputField";
+"use client";
+import { useState } from "react";
+import InputField, { FormHeader, parseAmount } from "./InputField";
 import SubmitButton from "./SubmitButton";
+import { formatAmount } from "@/app/components/ui/money";
 
-const CreateOrEditPartition = ({ onSubmit, mode = "create", data }) => {
-  const [formData, setFormData] = useState({
-    name: "",
-    abbreviation: "",
-    balance: "",
+/* Create or edit an envelope (stored as a "partition"). */
+const CreateOrEditPartition = ({ onSubmit, mode = "create", data, onClose, currency, unassigned = 0 }) => {
+  const isEdit = mode === "edit";
+  const [form, setForm] = useState({
+    name: data?.name ?? "",
+    balance: data?.balance !== undefined ? String(data.balance) : "",
     description: "",
   });
+  const [errors, setErrors] = useState({});
 
-  const isEdit = mode === "edit";
-
-  const handleChange = (e) => {
+  const set = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setForm((f) => ({ ...f, [name]: value }));
+    if (errors[name]) setErrors((x) => ({ ...x, [name]: undefined }));
   };
 
-  const handleSubmit = (e) => {
+  const submit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    const amount = form.balance === "" ? 0 : parseAmount(form.balance);
+    const next = {};
+    if (!form.name.trim()) next.name = "Give the envelope a name.";
+    if (!Number.isFinite(amount) || amount < 0) next.balance = "Enter an amount of 0 or more.";
+    setErrors(next);
+    if (Object.keys(next).length) return;
+    onSubmit({
+      name: form.name.trim(),
+      abbreviation: data?.abbreviation || form.name.trim().slice(0, 3).toUpperCase(),
+      balance: amount,
+      ...(isEdit && form.description.trim() ? { description: form.description.trim() } : {}),
+    });
   };
 
-  useEffect(() => {
-    if (data) setFormData(data);
-  }, [data?.toString()]);
+  const canFill = !isEdit && unassigned > 0;
 
   return (
-    <div className="p-6 min-w-[320px]">
-      <div className="mb-6">
-        <h2 className="font-bold text-lg text-white">
-          {isEdit ? "Edit Partition" : "New Partition"}
-        </h2>
-        <p className="text-white/50 text-sm mt-1">
-          {isEdit
-            ? "Update the details for this partition"
-            : "Create a new wallet inside this pot"}
-        </p>
-      </div>
-      <form onSubmit={handleSubmit} className="space-y-1">
+    <form onSubmit={submit} noValidate>
+      <FormHeader
+        title={isEdit ? `Edit ${data?.name}` : "New envelope"}
+        subtitle={isEdit ? "Rename it or set what it holds." : "An envelope holds money for one purpose: rent, food, savings."}
+        onClose={onClose}
+      />
+      <div className="px-5 sm:px-6 py-5 flex flex-col gap-4">
         <InputField
           label="Name"
-          placeholder="e.g. Emergency Fund"
           name="name"
-          value={formData.name}
-          onChange={handleChange}
-          maxLength={20}
+          value={form.name}
+          onChange={set}
+          placeholder="e.g. Rent"
+          maxLength={28}
           required
+          autoFocus
+          error={errors.name}
+          autoComplete="off"
         />
-        <InputField
-          label="Abbreviation (optional)"
-          placeholder="e.g. EMG"
-          name="abbreviation"
-          value={formData.abbreviation}
-          onChange={handleChange}
-          maxLength={5}
-        />
-        <InputField
-          label="Amount"
-          placeholder="0.00"
-          name="balance"
-          type="number"
-          value={formData.balance}
-          onChange={handleChange}
-          required
-        />
+        <div>
+          <InputField
+            label={isEdit ? "Holds" : "Put in"}
+            name="balance"
+            inputMode="decimal"
+            value={form.balance}
+            onChange={set}
+            placeholder="0.00"
+            required={isEdit}
+            prefix={currency}
+            error={errors.balance}
+            autoComplete="off"
+            hint={
+              canFill ? undefined : isEdit ? "Changing this moves money in or out of Unassigned." : undefined
+            }
+          />
+          {canFill && (
+            <p className="m-0 mt-1.5 text-[13px] text-muted">
+              <span className="num">{formatAmount(unassigned)}</span> is unassigned.{" "}
+              <button
+                type="button"
+                className="text-mint font-medium underline-offset-2 hover:underline"
+                onClick={() => setForm((f) => ({ ...f, balance: String(unassigned) }))}
+              >
+                Use all of it
+              </button>
+            </p>
+          )}
+        </div>
         {isEdit && (
           <InputField
-            label="Reason for edit"
+            label="Reason"
             name="description"
-            placeholder="Why are you changing this?"
-            value={formData.description}
-            onChange={handleChange}
-            textarea
+            value={form.description}
+            onChange={set}
+            placeholder="Why the change?"
+            maxLength={80}
           />
         )}
-        <div className="pt-2">
-          <SubmitButton text={isEdit ? "Save Changes" : "Create Partition"} />
-        </div>
-      </form>
-    </div>
+        <SubmitButton text={isEdit ? "Save changes" : "Create envelope"} />
+      </div>
+    </form>
   );
 };
 

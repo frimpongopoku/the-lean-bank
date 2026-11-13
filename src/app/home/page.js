@@ -2,6 +2,7 @@ import React from "react";
 import { PotsProvider } from "../hooks/contexts/usePots";
 import PotHome from "./PotHome";
 import { TransactionProvider } from "../hooks/contexts/useTransactions";
+import { BorrowProvider } from "../hooks/contexts/useBorrow";
 import { AuthProvider } from "../auth/context/AuthContext";
 import AuthGuard from "../auth/AuthGuard";
 import { ToastProvider } from "../components/ToastProvider";
@@ -14,9 +15,11 @@ function HomeServerEntry() {
         <AuthProvider>
           <PotsProvider>
             <TransactionProvider>
-              <AuthGuard>
-                <PotHome />
-              </AuthGuard>
+              <BorrowProvider>
+                <AuthGuard>
+                  <PotHome />
+                </AuthGuard>
+              </BorrowProvider>
             </TransactionProvider>
           </PotsProvider>
         </AuthProvider>

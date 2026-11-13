@@ -1,272 +1,327 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faDownload,
-  faFilter,
-  faHandHoldingDollar,
-  faCircleCheck,
-  faMagnifyingGlass,
-  faXmark,
-} from "@fortawesome/free-solid-svg-icons";
-import TransactionsTable from "./components/TransactionTable";
-import { useModal } from "./components/EBModal";
-import PayUpConfirmation from "./components/PayUpConfirmation";
-import { useBorrow } from "@/app/hooks/contexts/useBorrow";
-import { formatDateTime, generatePDF } from "@/app/lib/utils";
-import { useState } from "react";
-import { saveAs } from "file-saver";
+"use client";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { format } from "date-fns";
+import Icon from "@/app/components/ui/Icon";
+import Menu from "@/app/components/ui/Menu";
+import { Money, partColor, daysAgo, shortDate, dateWithAge, formatAmount } from "@/app/components/ui/money";
+import { parseAmount } from "../forms/InputField";
+import useMoneyActions from "@/app/hooks/useMoneyActions";
+import { downloadCSV, downloadPDF } from "@/app/lib/export";
 
-export default function Borrowed({ data, potId, payUpIntoSource }) {
-  const { Modal, openModal, closeModal } = useModal();
-  const { markAsPaid, recordRepayment } = useBorrow();
-  const [selectedWallet, setSelectedWallet] = useState("");
-  const [search, setSearch] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+const owedOn = (l) => Math.max(0, (Number(l.amount) || 0) - (Number(l.paid_amount) || 0));
 
-  const payUp = (borrow) => {
-    openModal(
-      <PayUpConfirmation
-        borrow={borrow}
-        onConfirm={({ option, amount, isFullRepayment }) => {
-          recordRepayment(borrow?.id, amount);
-          closeModal();
-          if (option === "source_wallet") payUpIntoSource(borrow?.source_id, amount);
-        }}
-        onClose={closeModal}
-      />
-    );
-  };
+export default function Loans({ loans, pot, focusLoanId }) {
+  const { repay } = useMoneyActions();
+  const [env, setEnv] = useState("");
+  const [openId, setOpenId] = useState(focusLoanId || null);
+  const [showRepaid, setShowRepaid] = useState(false);
+  const parts = pot?.parts || [];
+  const cur = pot?.currency || "";
 
-  const renderAmount = (txn) => {
-    const total = Number(txn?.amount);
-    const paid = Number(txn?.paid_amount || 0);
-    const remaining = total - paid;
+  const colorFor = useMemo(() => {
+    const m = {};
+    parts.forEach((p, i) => (m[p.id] = partColor(i)));
+    return m;
+  }, [parts]);
+
+  const scoped = env ? loans.filter((l) => (l.source_id || l.part_id) === env) : loans;
+  const open = scoped.filter((l) => !l.paid).sort((a, b) => (a._d?.getTime() || 0) - (b._d?.getTime() || 0));
+  const repaid = scoped.filter((l) => l.paid).sort((a, b) => (b._d?.getTime() || 0) - (a._d?.getTime() || 0));
+  const owed = open.reduce((a, l) => a + owedOn(l), 0);
+  const repaidTotal = scoped.reduce((a, l) => a + (Number(l.paid_amount) || (l.paid ? Number(l.amount) || 0 : 0)), 0);
+
+  const envOptions = useMemo(() => {
+    const m = new Map();
+    loans.forEach((l) => {
+      const id = l.source_id || l.part_id;
+      if (id && !m.has(id)) m.set(id, parts.find((p) => p.id === id)?.name || `${l.source} (deleted)`);
+    });
+    return [...m.entries()];
+  }, [loans, parts]);
+
+  const headers = ["Date", "Envelope", "Note", `Amount${cur ? ` (${cur})` : ""}`, "Repaid", "Status"];
+  const rows = () =>
+    scoped.map((l) => [
+      l._d ? format(l._d, "yyyy-MM-dd") : "",
+      l.source || "",
+      l.description || "",
+      (Number(l.amount) || 0).toFixed(2),
+      (Number(l.paid_amount) || (l.paid ? Number(l.amount) : 0) || 0).toFixed(2),
+      l.paid ? "Repaid" : "Open",
+    ]);
+  const fileName = `${(pot?.name || "pot").replace(/[^\w]+/g, "-").toLowerCase()}-loans`;
+
+  if (!loans.length) {
     return (
-      <div>
-        <span className="text-brand-amber font-bold tabular-nums text-sm block">{total.toLocaleString()}</span>
-        {paid > 0 && !txn?.paid && (
-          <span className="text-white/35 text-xs tabular-nums">{remaining.toLocaleString()} left</span>
-        )}
+      <div className="card px-6 py-12 flex flex-col items-center text-center gap-3">
+        <span className="w-11 h-11 rounded-full bg-raised text-amber inline-flex items-center justify-center">
+          <Icon name="loan" size={20} />
+        </span>
+        <h2 className="m-0 text-base font-semibold">No loans</h2>
+        <p className="m-0 text-muted max-w-[44ch]">
+          When you borrow from an envelope, record it with <span className="text-ink">Lend out</span>. It stays here until
+          it&apos;s repaid, so nothing quietly goes missing.
+        </p>
       </div>
     );
-  };
-
-  const renderStatus = (txn) => {
-    if (txn?.paid) {
-      return (
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-emerald px-2.5 py-1 rounded-full"
-          style={{ background: "rgba(16,185,129,0.1)" }}>
-          <FontAwesomeIcon icon={faCircleCheck} className="text-xs" />
-          Paid
-        </span>
-      );
-    }
-    const paid = Number(txn?.paid_amount || 0);
-    const label = paid > 0 ? "Repay more" : "Mark Paid";
-    return (
-      <button
-        onClick={() => payUp(txn)}
-        className="text-xs font-bold px-3 py-1.5 rounded-xl text-brand-emerald transition-all duration-150"
-        style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)" }}
-        onMouseOver={(e) => { e.currentTarget.style.background = "rgba(16,185,129,0.18)"; }}
-        onMouseOut={(e) => { e.currentTarget.style.background = "rgba(16,185,129,0.1)"; }}
-      >
-        {label}
-      </button>
-    );
-  };
-
-  const transformToTableFormat = (borrows) =>
-    borrows.map((txn) => [
-      { value: txn.source },
-      { func: () => renderAmount(txn) },
-      { value: formatDateTime(txn.date) },
-      { value: txn.description },
-      { func: () => renderStatus(txn) },
-    ]);
-
-  const potFiltered = (data?.filter((txn) => txn?.pot_id === potId) || []).reverse();
-
-  const filtered = potFiltered
-    .filter((txn) => (selectedWallet ? txn.source === selectedWallet : true))
-    .filter((txn) => {
-      if (!search) return true;
-      const q = search.toLowerCase();
-      return (
-        txn.description?.toLowerCase().includes(q) ||
-        txn.source?.toLowerCase().includes(q)
-      );
-    })
-    .filter((txn) => (dateFrom ? new Date(txn.date) >= new Date(dateFrom) : true))
-    .filter((txn) => (dateTo ? new Date(txn.date) <= new Date(dateTo + "T23:59:59") : true))
-    .filter((txn) => {
-      if (statusFilter === "paid") return txn.paid;
-      if (statusFilter === "unpaid") return !txn.paid;
-      return true;
-    })
-    .slice(0, 100);
-
-  const hasFilters = selectedWallet || search || dateFrom || dateTo || statusFilter;
-
-  const clearFilters = () => {
-    setSelectedWallet("");
-    setSearch("");
-    setDateFrom("");
-    setDateTo("");
-    setStatusFilter("");
-  };
-
-  const borrows = transformToTableFormat(filtered);
-
-  const tableHeadings = ["Partition", "Amount", "Date", "Description", "Status"];
-
-  const uniqueWallets = [...new Set(potFiltered.map((txn) => txn.source).filter(Boolean))];
-
-  const totalOwed = filtered
-    .filter((t) => !t.paid)
-    .reduce((s, t) => s + (Number(t.amount) || 0) - (Number(t.paid_amount) || 0), 0);
-  const totalPaid = filtered
-    .filter((t) => t.paid)
-    .reduce((s, t) => s + (Number(t.amount) || 0), 0);
-
-  const downloadAsCSV = () => {
-    const csvContent = [
-      ["Partition", "Amount", "Date", "Description", "Paid"],
-      ...filtered.map((txn) => [
-        txn.source, txn.amount, formatDateTime(txn.date), txn.description,
-        txn.paid ? "Yes" : "No",
-      ]),
-    ]
-      .map((row) => row.join(","))
-      .join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    saveAs(blob, `${formatDateTime(new Date())}-borrows.csv`);
-  };
+  }
 
   return (
-    <div className="py-4">
-      <Modal />
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 mb-5">
-        <div className="glass-sm p-3.5">
-          <p className="text-white/40 text-xs mb-1.5 uppercase tracking-wider font-semibold">
-            Outstanding
-          </p>
-          <p className="text-brand-amber font-bold text-xl tabular-nums">
-            {totalOwed.toLocaleString()}
-          </p>
+    <section aria-label="Loans" className="flex flex-col gap-5">
+      <div className="flex flex-wrap gap-x-8 gap-y-3 items-end">
+        <div>
+          <div className="text-[13px] text-muted">Still owed to your envelopes</div>
+          <Money value={owed} currency={cur} className="text-[28px] sm:text-[32px] font-medium text-amber" currencyClassName="text-[0.55em]" />
         </div>
-        <div className="glass-sm p-3.5">
-          <p className="text-white/40 text-xs mb-1.5 uppercase tracking-wider font-semibold">
-            Repaid
-          </p>
-          <p className="text-brand-emerald font-bold text-xl tabular-nums">
-            {totalPaid.toLocaleString()}
-          </p>
+        <div>
+          <div className="text-[13px] text-muted">Open loans</div>
+          <div className="num text-[22px]">{open.length}</div>
+        </div>
+        <div>
+          <div className="text-[13px] text-muted">Repaid all-time</div>
+          <Money value={repaidTotal} className="text-[22px]" />
+        </div>
+        <div className="sm:ml-auto flex gap-2 flex-wrap">
+          {envOptions.length > 1 && (
+            <label>
+              <span className="sr-only">Envelope</span>
+              <select className="field !h-10 !w-auto" value={env} onChange={(e) => setEnv(e.target.value)}>
+                <option value="">All envelopes</option>
+                {envOptions.map(([id, name]) => (
+                  <option key={id} value={id}>{name}</option>
+                ))}
+              </select>
+            </label>
+          )}
+          <Menu
+            items={[
+              { label: "Download CSV", icon: "download", onSelect: () => downloadCSV(fileName, headers, rows()) },
+              { label: "Download PDF", icon: "download", onSelect: () => downloadPDF(fileName, `${pot?.name} · Loans`, headers, rows()) },
+            ]}
+          >
+            {(p) => (
+              <button {...p} type="button" className="btn-ghost !h-10">
+                <Icon name="download" />
+                Export
+              </button>
+            )}
+          </Menu>
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="space-y-2 mb-5">
-        {/* Row 1: search + partition + status */}
-        <div className="flex flex-wrap gap-2">
-          <div className="relative flex-1 min-w-[180px]">
-            <FontAwesomeIcon icon={faMagnifyingGlass} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 text-xs pointer-events-none" />
+      <section aria-labelledby="open-h" className="card overflow-hidden">
+        <h2 id="open-h" className="m-0 px-4 sm:px-5 pt-4 pb-3 text-sm font-semibold">Open</h2>
+        {open.length === 0 ? (
+          <p className="m-0 px-5 pb-5 text-muted text-sm">Everything is repaid.</p>
+        ) : (
+          <ul className="list-none m-0 p-0">
+            {open.map((l) => (
+              <LoanRow
+                key={l.id}
+                loan={l}
+                pot={pot}
+                color={colorFor[l.source_id || l.part_id]}
+                expanded={openId === l.id}
+                onToggle={() => setOpenId((id) => (id === l.id ? null : l.id))}
+                onRepay={(v) => {
+                  setOpenId(null);
+                  repay(pot.id, l, v);
+                }}
+              />
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {repaid.length > 0 && (
+        <section aria-label="Repaid loans" className="border border-line rounded-2xl">
+          <button
+            type="button"
+            aria-expanded={showRepaid}
+            onClick={() => setShowRepaid((v) => !v)}
+            className="w-full flex items-center gap-2.5 px-4 sm:px-5 py-4 text-left text-ink font-medium"
+          >
+            <span className={`text-muted transition-transform duration-200 ease-out ${showRepaid ? "rotate-90" : ""}`}>
+              <Icon name="chevronRight" />
+            </span>
+            Repaid
+            <span className="text-muted font-normal">
+              {repaid.length} loan{repaid.length === 1 ? "" : "s"}
+            </span>
+          </button>
+          {showRepaid && (
+            <ul className="list-none m-0 p-0 border-t border-line">
+              {repaid.map((l, i) => (
+                <li key={l.id} className={`flex items-center gap-3 px-4 sm:px-5 py-3 ${i ? "border-t border-line" : ""}`}>
+                  <div className="flex-1 min-w-0">
+                    <div className="truncate text-ink-2">{l.description || "Loan"}</div>
+                    <div className="text-xs text-muted truncate">
+                      From {l.source} · {shortDate(l._d)}
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 text-xs text-muted">
+                    <Icon name="check" size={14} className="text-mint" />
+                    Repaid
+                  </span>
+                  <Money value={l.amount} className="text-muted w-24 text-right" />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+    </section>
+  );
+}
+
+function LoanRow({ loan, pot, color, expanded, onToggle, onRepay }) {
+  const rowRef = useRef(null);
+  const total = Number(loan.amount) || 0;
+  const back = Number(loan.paid_amount) || 0;
+  const owed = owedOn(loan);
+  const part = (pot?.parts || []).find((p) => p.id === (loan.source_id || loan.part_id));
+
+  useEffect(() => {
+    if (expanded) rowRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [expanded]);
+
+  return (
+    <li ref={rowRef} className={`border-t border-line ${expanded ? "bg-surface-2" : ""}`}>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] md:grid-cols-[minmax(0,1fr)_150px_120px_110px] items-center gap-x-3 md:gap-x-4 px-4 sm:px-5 py-3.5">
+        <div className="min-w-0">
+          <div className="font-medium truncate" title={loan.description || undefined}>{loan.description || "Loan"}</div>
+          <Money value={owed} className="md:hidden block text-[15px] mt-0.5" />
+          <div className="text-xs text-muted flex items-center gap-1.5 min-w-0">
+            <span className="w-2 h-2 rounded-[2px] flex-none" style={{ background: color || "var(--line-strong)" }} />
+            <span className="truncate">
+              From {loan.source} · {dateWithAge(loan._d)}
+            </span>
+          </div>
+        </div>
+        <div className="hidden md:flex flex-col gap-1.5">
+          <span className="h-1 rounded-full bg-line-strong overflow-hidden">
+            <span className="block h-full bg-amber" style={{ width: `${total ? (back / total) * 100 : 0}%` }} />
+          </span>
+          <span className="text-xs text-muted">
+            {back > 0 ? (
+              <>
+                <Money value={back} /> of <Money value={total} /> back
+              </>
+            ) : (
+              "Nothing back yet"
+            )}
+          </span>
+        </div>
+        <Money value={owed} className="hidden md:block text-right text-[15px]" />
+        <div className="text-right">
+          <button type="button" className="btn-ghost !h-9 !px-3 text-[13px]" aria-expanded={expanded} onClick={onToggle}>
+            {expanded ? "Close" : "Repay"}
+          </button>
+        </div>
+      </div>
+      {expanded && <RepayForm loan={loan} owed={owed} part={part} currency={pot?.currency || ""} onCancel={onToggle} onSubmit={onRepay} />}
+    </li>
+  );
+}
+
+function RepayForm({ loan, owed, part, currency, onCancel, onSubmit }) {
+  const [amount, setAmount] = useState(String(owed));
+  const [dest, setDest] = useState(part ? "envelope" : "settle");
+  const [error, setError] = useState("");
+  const value = parseAmount(amount);
+  const valid = Number.isFinite(value) && value > 0 && value <= owed + 0.001;
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    inputRef.current?.focus({ preventScroll: true });
+    inputRef.current?.select();
+  }, []);
+
+  const submit = (e) => {
+    e.preventDefault();
+    if (!Number.isFinite(value) || value <= 0) return setError("Enter an amount above zero.");
+    if (value > owed + 0.001) return setError(`Only ${currency} ${formatAmount(owed)} is still owed.`);
+    onSubmit({ amount: value, toEnvelope: dest === "envelope" && !!part });
+  };
+
+  const partial = valid && value < owed - 0.001;
+  const after = (Number(part?.balance) || 0) + (valid ? value : 0);
+
+  return (
+    <form onSubmit={submit} className="px-4 sm:px-5 pb-5 pt-1 flex flex-col gap-4" aria-label={`Repay ${loan.description || "loan"}`}>
+      <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
+        <div className="flex-[0_1_240px]">
+          <label className="field-label" htmlFor={`repay-${loan.id}`}>Amount repaid</label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-faint text-sm pointer-events-none">{currency}</span>
             <input
-              type="text"
-              placeholder="Search description, partition…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 pr-3 py-2 text-sm rounded-xl text-white/80 w-full"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", outline: "none" }}
+              ref={inputRef}
+              id={`repay-${loan.id}`}
+              className="field num"
+              style={{ paddingLeft: currency ? `${currency.length * 9 + 22}px` : undefined }}
+              inputMode="decimal"
+              autoComplete="off"
+              value={amount}
+              onChange={(e) => {
+                setAmount(e.target.value);
+                setError("");
+              }}
+              aria-invalid={!!error}
             />
           </div>
-          <div className="relative">
-            <FontAwesomeIcon icon={faFilter} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 text-xs pointer-events-none" />
-            <select
-              value={selectedWallet}
-              onChange={(e) => setSelectedWallet(e.target.value)}
-              className="pl-8 pr-3 py-2 text-sm rounded-xl text-white/75 appearance-none cursor-pointer"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", outline: "none" }}
-            >
-              <option value="">All partitions</option>
-              {uniqueWallets.map((w) => <option key={w} value={w}>{w}</option>)}
-            </select>
-          </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 text-sm rounded-xl text-white/75 appearance-none cursor-pointer"
-            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", outline: "none" }}
-          >
-            <option value="">All statuses</option>
-            <option value="unpaid">Outstanding</option>
-            <option value="paid">Repaid</option>
-          </select>
         </div>
-
-        {/* Row 2: date range + actions */}
-        <div className="flex flex-wrap gap-2 items-center">
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="px-3 py-2 text-sm rounded-xl text-white/70 cursor-pointer"
-            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", outline: "none", colorScheme: "dark" }}
-          />
-          <span className="text-white/30 text-xs">to</span>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="px-3 py-2 text-sm rounded-xl text-white/70 cursor-pointer"
-            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", outline: "none", colorScheme: "dark" }}
-          />
-          {hasFilters && (
-            <button onClick={clearFilters} className="flex items-center gap-1.5 text-white/40 hover:text-white/70 text-xs transition-colors">
-              <FontAwesomeIcon icon={faXmark} />
-              Clear
-            </button>
+        <span className="text-[13px] text-muted pb-3">
+          {partial ? (
+            <>
+              <Money value={owed - value} /> will still be owed.
+            </>
+          ) : (
+            "Pay part of it now and the rest later."
           )}
-          <div className="flex gap-2 ml-auto">
-            <button onClick={downloadAsCSV} className="btn-ghost text-xs py-2 px-3">
-              <FontAwesomeIcon icon={faDownload} className="text-brand-emerald" /> CSV
-            </button>
-            <button
-              onClick={() => generatePDF("Borrows", `${formatDateTime(new Date())}-borrows`, ".printable-borrowed-area")}
-              className="btn-ghost text-xs py-2 px-3"
-            >
-              <FontAwesomeIcon icon={faDownload} className="text-brand-emerald" /> PDF
-            </button>
-          </div>
-        </div>
+        </span>
       </div>
 
-      {!filtered.length && (
-        <div className="glass text-center py-12 px-6">
-          <div className="w-12 h-12 rounded-xl bg-brand-amber/10 flex items-center justify-center mx-auto mb-3">
-            <FontAwesomeIcon icon={faHandHoldingDollar} className="text-brand-amber text-lg" />
-          </div>
-          <h3 className="text-white font-semibold mb-1">No borrows recorded</h3>
-          <p className="text-white/40 text-sm">
-            Use the Borrow action on a partition to track informal loans.
-          </p>
-        </div>
-      )}
+      <fieldset className="border-0 p-0 m-0 flex flex-wrap gap-3">
+        <legend className="text-[13px] text-muted mb-2">Where does the money go?</legend>
+        <Option checked={dest === "envelope"} disabled={!part} onChange={() => setDest("envelope")} name={`dest-${loan.id}`}>
+          <span className="font-medium">{part ? `Back into ${part.name}` : `Back into ${loan.source}`}</span>
+          <span className="text-[13px] text-muted">
+            {part ? (
+              <>
+                {part.name} goes from <Money value={part.balance} /> to <Money value={after} className="text-ink" />. Logged as money in.
+              </>
+            ) : (
+              "That envelope was deleted."
+            )}
+          </span>
+        </Option>
+        <Option checked={dest === "settle"} onChange={() => setDest("settle")} name={`dest-${loan.id}`}>
+          <span className="font-medium">Settle without refunding</span>
+          <span className="text-[13px] text-muted">The money was used elsewhere. Closes the loan; no envelope changes.</span>
+        </Option>
+      </fieldset>
 
-      {filtered.length > 0 && (
-        <div
-          className="rounded-2xl p-4 printable-borrowed-area"
-          style={{
-            background: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.06)",
-          }}
-        >
-          <TransactionsTable data={borrows} head={tableHeadings} />
-        </div>
-      )}
-    </div>
+      {error && <p className="m-0 text-[13px] text-danger" role="alert">{error}</p>}
+
+      <div className="flex justify-end gap-2">
+        <button type="button" className="btn-ghost" onClick={onCancel}>Cancel</button>
+        <button type="submit" className="btn-primary">
+          {valid ? `Repay ${currency} ${formatAmount(value)}` : "Repay"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function Option({ checked, disabled, onChange, name, children }) {
+  return (
+    <label
+      className={`flex gap-3 items-start rounded-xl border p-3.5 flex-[1_1_260px] transition-colors duration-150 ${
+        disabled ? "opacity-50 cursor-not-allowed border-line-strong" : "cursor-pointer"
+      } ${checked && !disabled ? "border-mint bg-[rgba(94,230,176,0.05)]" : "border-line-strong hover:border-[#3a3f47]"}`}
+    >
+      <input type="radio" name={name} checked={checked} disabled={disabled} onChange={onChange} className="mt-[3px] accent-[#5EE6B0] w-4 h-4 flex-none" />
+      <span className="flex flex-col gap-0.5 min-w-0">{children}</span>
+    </label>
   );
 }

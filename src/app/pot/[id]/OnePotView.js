@@ -1,348 +1,401 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faWallet, faBook, faMoneyBillTransfer, faArrowLeft,
-  faEdit, faPlus, faCircleCheck, faCircleXmark, faUnlock,
-} from "@fortawesome/free-solid-svg-icons";
-import Partitions from "./Partitions";
-import Transactions from "./Transactions";
-import Borrowed from "./Borrowed";
-import { TabViewer } from "@/app/components/TabViewer";
+import Link from "next/link";
+import { startOfMonth, format } from "date-fns";
+import Envelopes from "./Partitions";
+import Activity from "./Transactions";
+import Loans from "./Borrowed";
 import { useModal } from "./components/EBModal";
 import Loading from "@/app/components/Loading";
+import Fallback from "@/app/components/Fallback";
 import CreateOrEditPartition from "../forms/CreateOrEditPartition";
 import CreateOrEditPotForm from "@/app/home/CreateOrEditPotForm";
-import TransferForm from "../forms/TransferForm";
-import { useRouter } from "next/navigation";
+import RecordForm from "../forms/RecordForm";
+import AssignForm from "../forms/AssignForm";
 import { usePots } from "@/app/hooks/contexts/usePots";
-import Fallback from "@/app/components/Fallback";
-import FreeMoneySummary from "./components/FreeMoneySummary";
-import ChecksumSummary from "./components/ChecksumSummary";
 import { generateUniqueId, useTransactions } from "@/app/hooks/contexts/useTransactions";
 import { useBorrow } from "@/app/hooks/contexts/useBorrow";
-import AuthGuard from "@/app/auth/AuthGuard";
-import { makeDate } from "@/app/lib/utils";
-import { UNDEFINED, useAuth } from "@/app/auth/context/AuthContext";
-import { getUserCollection } from "@/app/auth/utils/firestore-utils";
-import MaskNumber from "@/app/components/MaskNumber";
+import { useAuth } from "@/app/auth/context/AuthContext";
 import { useToast } from "@/app/components/ToastProvider";
+import useUserData from "@/app/hooks/useUserData";
+import useMoneyActions from "@/app/hooks/useMoneyActions";
+import AppHeader from "@/app/components/ui/AppHeader";
+import AllocationBar from "@/app/components/ui/AllocationBar";
+import ConfirmDialog from "@/app/components/ui/ConfirmDialog";
+import Tabs from "@/app/components/ui/Tabs";
+import Icon from "@/app/components/ui/Icon";
+import useShortcut from "@/app/components/ui/useShortcut";
+import { Money, sumParts, toDate, isIn, isMove, formatAmount, shortDate } from "@/app/components/ui/money";
 
-function OnePotView({ potId, userId }) {
+const TAB_IDS = ["envelopes", "activity", "loans"];
+
+function OnePotView({ potId, userId, initialTab, focusLoanId }) {
   const { Modal, openModal, closeModal } = useModal();
-  const [notFound, setNotFound] = useState(false);
-  const router = useRouter();
   const toast = useToast();
+  const { user } = useAuth();
+  const uid = user?.uid || userId;
+  const status = useUserData(uid);
+  const { record, assign } = useMoneyActions();
 
-  const {
-    potData, setPotData, editPot, addPartToPot, updatePartInPot,
-    removePartFromPot, updatePotWithDeposit, updatePotWithWithdrawal,
-    transferBetweenPartitions,
-  } = usePots();
+  const { potData, editPot, addPartToPot, updatePartInPot, removePartFromPot } = usePots();
+  const { transactions, addDeposit, addWithdrawal } = useTransactions() || {};
+  const { borrows } = useBorrow() || {};
 
-  const { transactions, addDeposit, addWithdrawal, setTransactions } = useTransactions();
-  const { borrows, addBorrow, setBorrows } = useBorrow();
+  const [tab, setTab] = useState(TAB_IDS.includes(initialTab) ? initialTab : "envelopes");
+  const changeTab = (id) => {
+    setTab(id);
+    const url = new URL(window.location.href);
+    if (id === "envelopes") url.searchParams.delete("tab");
+    else url.searchParams.set("tab", id);
+    url.searchParams.delete("loan");
+    window.history.replaceState(null, "", url);
+  };
 
-  const pots = potData?.pots || [];
-  const targetPot = useMemo(
-    () => pots.find((p) => p.id?.toString() === potId),
-    [pots, potId]
+  const pot = useMemo(() => (potData?.pots || []).find((p) => String(p.id) === String(potId)), [potData, potId]);
+  const parts = pot?.parts || [];
+  const balance = Number(pot?.balance) || 0;
+  const assigned = sumParts(parts);
+  const free = Math.round((balance - assigned) * 100) / 100;
+  const cur = pot?.currency || "";
+
+  const potTxns = useMemo(
+    () =>
+      (transactions || [])
+        .filter((t) => t?.pot_id === pot?.id)
+        .map((t) => ({ ...t, _d: toDate(t.date) }))
+        .sort((a, b) => (b._d?.getTime() || 0) - (a._d?.getTime() || 0)),
+    [transactions, pot?.id]
   );
+  const potLoans = useMemo(
+    () => (borrows || []).filter((b) => b?.pot_id === pot?.id).map((b) => ({ ...b, _d: toDate(b.date) })),
+    [borrows, pot?.id]
+  );
+  const openLoans = potLoans.filter((l) => !l.paid);
 
   useEffect(() => {
-    getUserCollection(userId).then((data) => {
-      if (!data) return setNotFound(true);
-      const { TRANSACTIONS, POTS, BORROWED } = data;
-      setPotData(POTS);
-      setTransactions(TRANSACTIONS);
-      setBorrows(BORROWED);
-    });
-  }, [userId]);
+    if (pot?.name) document.title = `${pot.name} · Lean Bank`;
+  }, [pot?.name]);
 
-  useEffect(() => {
-    if (targetPot?.name) document.title = `${targetPot.name} | The Lean Bank`;
-  }, [targetPot?.name]);
+  /* ── Actions ─────────────────────────────────────────────────────────── */
+  const openRecord = (opts = {}) =>
+    openModal(
+      <RecordForm
+        pots={[pot]}
+        initialMode={opts.mode}
+        initialPartId={opts.partId}
+        onClose={closeModal}
+        onSubmit={({ potId: id, ...rest }) => {
+          closeModal();
+          record(id, rest);
+        }}
+      />,
+      { instant: opts.instant }
+    );
 
-  const { name, parts, balance } = targetPot || {};
+  useShortcut("r", () => pot && openRecord({ instant: true }));
 
-  const sumOfAllPartitionBalance = useMemo(
-    () => (parts || []).reduce((acc, p) => acc + Number(p?.balance), 0),
-    [parts]
-  );
-
-  if (potData?.key === UNDEFINED) return <Loading full />;
-  if (notFound) return <Fallback message="Pot not found" backUrl="/home" />;
-
-  // ── Pot edit ──
-  const editPotContent = () => {
+  const editPotDetails = (focus) =>
     openModal(
       <CreateOrEditPotForm
-        isEdit={targetPot}
-        data={targetPot}
+        isEdit
+        data={pot}
+        focus={focus}
+        onClose={closeModal}
         onSubmit={(content) => {
           closeModal();
-          const oldBalance = Number(targetPot.balance);
-          const newBalance = Number(content.balance);
+          const diff = Math.round((Number(content.balance) - balance) * 100) / 100;
           editPot(content);
-          if (newBalance !== oldBalance) {
-            const diff = newBalance - oldBalance;
-            const isIncrease = diff > 0;
-            const fn = isIncrease ? addDeposit : addWithdrawal;
+          if (diff !== 0) {
+            const fn = diff > 0 ? addDeposit : addWithdrawal;
             fn({
-              description: "Manual balance adjustment",
+              kind: "adjust",
+              description: "Balance updated",
               amount: Math.abs(diff),
               source: "Adjustment",
-              pot_id: targetPot.id,
+              pot_id: pot.id,
               part_id: null,
+              date: new Date(),
             });
-            toast.success(
-              `Balance ${isIncrease ? "increased" : "decreased"} by ${Math.abs(diff).toLocaleString()} — adjustment recorded`
-            );
+            toast.success(`Balance updated to ${cur} ${formatAmount(content.balance)}`);
           } else {
             toast.success("Pot updated");
           }
         }}
       />
     );
-  };
 
-  // ── Partitions ──
-  const createOrEditPartition = (content) => {
+  const createOrEditEnvelope = (part) =>
     openModal(
       <CreateOrEditPartition
-        mode={content?.id ? "edit" : "create"}
-        data={content}
-        onSubmit={(formData) => {
+        mode={part ? "edit" : "create"}
+        data={part}
+        currency={cur}
+        unassigned={free}
+        onClose={closeModal}
+        onSubmit={(form) => {
           closeModal();
-          if (content) {
-            updatePartInPot(targetPot?.id, { ...content, ...formData });
-            toast.success(`"${formData.name || content.name}" updated`);
+          if (part) {
+            updatePartInPot(pot.id, { ...part, ...form });
+            toast.success(`${form.name} updated`);
           } else {
-            addPartToPot(targetPot?.id, {
-              ...formData,
-              id: generateUniqueId("prt_"),
-              date: makeDate(),
-              pot_id: targetPot?.id,
-            });
-            toast.success(`"${formData.name}" created`);
+            addPartToPot(pot.id, { ...form, id: generateUniqueId("prt_"), date: new Date(), pot_id: pot.id, currency: cur });
+            toast.success(`${form.name} created`);
           }
         }}
       />
     );
-  };
 
-  const removePartition = (id) => {
-    const part = (parts || []).find((p) => p.id === id);
-    removePartFromPot(targetPot?.id, id);
-    // MF-09: undo within 5 seconds
-    toast.success(`"${part?.name}" removed`, {
-      duration: 5000,
-      undo: () => {
-        addPartToPot(targetPot?.id, part);
-        toast.info(`"${part?.name}" restored`);
-      },
-    });
-  };
+  const deleteEnvelope = (part) =>
+    openModal(
+      <ConfirmDialog
+        title={`Delete ${part.name}?`}
+        confirmLabel="Delete envelope"
+        onCancel={closeModal}
+        onConfirm={() => {
+          closeModal();
+          removePartFromPot(pot.id, part.id);
+          toast.success(`${part.name} deleted`, { undo: () => addPartToPot(pot.id, part) });
+        }}
+      >
+        {Number(part.balance) > 0 ? (
+          <>
+            The <span className="num text-ink">{cur} {formatAmount(part.balance)}</span> it holds goes back to Unassigned.
+            Its activity history is kept.
+          </>
+        ) : (
+          "Its activity history is kept."
+        )}
+      </ConfirmDialog>
+    );
 
-  // ── Transactions ──
-  const createDeposit = (content, partition) => {
-    addDeposit({ ...content, source: partition?.name, pot_id: targetPot?.id, part_id: partition?.id });
-    updatePotWithDeposit(targetPot?.id, partition?.id, Number(content?.amount));
-    toast.success(`+${Number(content.amount).toLocaleString()} deposited to ${partition?.name}`);
-  };
+  const openAssign = () =>
+    openModal(
+      <AssignForm
+        parts={parts}
+        unassigned={free}
+        currency={cur}
+        onClose={closeModal}
+        onSubmit={(v) => {
+          closeModal();
+          assign(pot.id, v);
+        }}
+      />
+    );
 
-  const createWithdrawal = (content, partition) => {
-    addWithdrawal({ ...content, source: partition?.name, pot_id: targetPot?.id, part_id: partition?.id });
-    updatePotWithWithdrawal(targetPot?.id, partition?.id, Number(content?.amount));
-    toast.success(`−${Number(content.amount).toLocaleString()} spent from ${partition?.name}`);
-  };
+  /* ── States ──────────────────────────────────────────────────────────── */
+  if (status === "error") return <Fallback title="Couldn't load" message="We couldn't reach your data. Check your connection and try again." backUrl="/home" />;
+  if (status !== "ready") return <Loading full message="Loading pot…" />;
+  if (!pot) return <Fallback message="This pot doesn't exist or was deleted." backUrl="/home" />;
 
-  const doBorrow = (content, partition) => {
-    addBorrow({ ...content, id: generateUniqueId("bor_"), pot_id: targetPot?.id, part_id: partition?.id });
-    // create withdrawal without toast (the borrow toast covers it)
-    addWithdrawal({
-      description: `Borrowed: ${content?.description}`,
-      amount: Number(content?.amount),
-      source: partition?.name,
-      pot_id: targetPot?.id,
-      part_id: partition?.id,
-    });
-    updatePotWithWithdrawal(targetPot?.id, partition?.id, Number(content?.amount));
-    toast.info(`Borrow of ${Number(content.amount).toLocaleString()} recorded from ${partition?.name}`);
-  };
+  /* ── Month summary (moves and adjustments excluded) ──────────────────── */
+  const monthStart = startOfMonth(new Date());
+  const monthTx = potTxns.filter((t) => t._d && t._d >= monthStart && !isMove(t) && t.kind !== "adjust" && t.source !== "Adjustment");
+  const monthIn = monthTx.filter(isIn).reduce((a, t) => a + (Number(t.amount) || 0), 0);
+  const monthOut = monthTx.filter((t) => !isIn(t)).reduce((a, t) => a + (Number(t.amount) || 0), 0);
+  const outBy = {};
+  monthTx.filter((t) => !isIn(t)).forEach((t) => {
+    outBy[t.source] = outBy[t.source] || { amount: 0, n: 0 };
+    outBy[t.source].amount += Number(t.amount) || 0;
+    outBy[t.source].n += 1;
+  });
+  const topOut = Object.entries(outBy).sort((a, b) => b[1].amount - a[1].amount)[0];
+  const owed = openLoans.reduce((a, l) => a + (Number(l.amount) || 0) - (Number(l.paid_amount) || 0), 0);
+  const oldestLoan = [...openLoans].sort((a, b) => (a._d?.getTime() || 0) - (b._d?.getTime() || 0))[0];
+  const lastAdjust = potTxns.find((t) => t.kind === "adjust" || t.source === "Adjustment");
 
-  // MF-06: Transfer between partitions
-  const doTransfer = (formData, fromPartition) => {
-    const amount = Number(formData.amount);
-    const toPartition = (parts || []).find((p) => p.id === formData.toPartId);
-    if (!toPartition || !amount) return;
-
-    transferBetweenPartitions(targetPot?.id, fromPartition?.id, toPartition?.id, amount);
-
-    addWithdrawal({
-      description: `Transfer → ${toPartition.name}${formData.description ? ": " + formData.description : ""}`,
-      amount,
-      source: fromPartition.name,
-      pot_id: targetPot?.id,
-      part_id: fromPartition.id,
-    });
-    addDeposit({
-      description: `Transfer ← ${fromPartition.name}${formData.description ? ": " + formData.description : ""}`,
-      amount,
-      source: toPartition.name,
-      pot_id: targetPot?.id,
-      part_id: toPartition.id,
-    });
-
-    toast.success(`${amount.toLocaleString()} transferred from ${fromPartition.name} to ${toPartition.name}`);
-  };
-
-  const payUpIntoSource = (partId, amount) => {
-    const partition = (parts || []).find((p) => p.id === partId);
-    createDeposit({ description: "Borrow repaid", amount }, partition);
-  };
-
-  // ── Financials ──
-  const freeMoney = balance - sumOfAllPartitionBalance;
-  const freeMoneyIsInvalid = freeMoney < 0;
-  const onlySumValidity = sumOfAllPartitionBalance + freeMoney === Number(balance);
-  const checkSumIsValid = onlySumValidity && !freeMoneyIsInvalid;
+  const health =
+    !parts.length
+      ? null
+      : free > 0.004
+      ? { tone: "free", title: <><Money value={free} currency={cur} currencyClassName="!text-mint" /> to assign</>, text: "This money is in the account but no envelope holds it yet.", action: "Assign to envelopes", onAction: openAssign }
+      : free < -0.004
+      ? { tone: "over", title: <>Over-assigned by <Money value={Math.abs(free)} currency={cur} currencyClassName="!text-danger" /></>, text: "Envelopes hold more than the account. Update the balance, or take money out of an envelope.", action: "Update balance", onAction: () => editPotDetails("balance") }
+      : { tone: "ok", title: "Balanced", text: "Every bit of this account sits in an envelope." };
 
   const tabs = [
+    { id: "envelopes", label: "Envelopes", badge: <span className="num text-xs text-muted">{parts.length}</span> },
+    { id: "activity", label: "Activity" },
     {
-      label: "Partitions",
-      icon: faWallet,
-      content: (
-        <Partitions
-          data={parts}
-          pot={targetPot}
-          totalSum={sumOfAllPartitionBalance}
-          editPartition={createOrEditPartition}
-          createPartition={createOrEditPartition}
-          onRemove={removePartition}
-          createDeposit={createDeposit}
-          createWithdrawal={createWithdrawal}
-          doBorrow={doBorrow}
-          doTransfer={(partition) =>
-            openModal(
-              <TransferForm
-                fromPartition={partition}
-                allPartitions={parts}
-                onSubmit={(formData) => { closeModal(); doTransfer(formData, partition); }}
-              />
-            )
-          }
-        />
-      ),
-    },
-    {
-      label: "Transactions",
-      icon: faBook,
-      content: <Transactions potId={targetPot?.id} data={transactions || []} />,
-    },
-    {
-      label: "Borrowed",
-      icon: faMoneyBillTransfer,
-      content: (
-        <Borrowed data={borrows || []} potId={targetPot?.id} payUpIntoSource={payUpIntoSource} />
-      ),
+      id: "loans",
+      label: "Loans",
+      badge: openLoans.length ? (
+        <span className="num text-[11px] leading-[18px] min-w-[18px] text-center px-1.5 rounded-full bg-amber text-[#0b0c0e]">{openLoans.length}</span>
+      ) : null,
     },
   ];
 
   return (
-    <AuthGuard signout>
+    <div className="min-h-[100dvh]">
       <Modal />
-      <div className="min-h-screen px-4 sm:px-6 py-8 max-w-5xl mx-auto">
+      <AppHeader />
 
-        {/* ── Back + title ── */}
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={() => router.push("/home")}
-            aria-label="Back to dashboard"
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-white/45 hover:text-white transition-colors"
-            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
-          >
-            <FontAwesomeIcon icon={faArrowLeft} className="text-sm" />
-          </button>
-          <h1 className="text-2xl font-bold text-white">{name || "…"}</h1>
-        </div>
-
-        {/* ── Metric cards ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-          {/* Balance */}
-          <div className="glass-sm p-4">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-white/40 text-xs uppercase tracking-wider font-semibold">Account Balance</p>
-              <button
-                onClick={editPotContent}
-                aria-label="Edit pot"
-                className="w-6 h-6 rounded-md flex items-center justify-center text-white/30 hover:text-brand-emerald hover:bg-brand-emerald/10 transition-colors"
-              >
-                <FontAwesomeIcon icon={faEdit} className="text-xs" />
+      <main className="max-w-[1280px] mx-auto px-4 sm:px-8 pt-6 sm:pt-7 pb-28 sm:pb-16 flex flex-col gap-6">
+        {/* Title */}
+        <div className="flex flex-col gap-2.5">
+          <nav aria-label="Breadcrumb" className="text-[13px] text-muted">
+            <Link href="/home" className="text-muted hover:text-ink">Pots</Link>
+            <span aria-hidden="true" className="mx-1.5">/</span>
+            <span className="text-ink" aria-current="page">{pot.name}</span>
+          </nav>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3 flex-wrap min-w-0">
+              <h1 className="m-0 text-2xl sm:text-[28px] font-semibold tracking-[-0.02em] break-words min-w-0">{pot.name}</h1>
+              {cur && <span className="text-xs text-muted border border-line-strong rounded-md px-2 py-0.5">{cur}</span>}
+            </div>
+            <div className="flex gap-2">
+              <button type="button" className="btn-ghost" onClick={() => editPotDetails()}>
+                <Icon name="edit" />
+                <span className="hidden sm:inline">Edit pot</span>
+                <span className="sr-only sm:hidden">Edit pot</span>
+              </button>
+              <button type="button" className="btn-primary hidden sm:inline-flex" onClick={() => openRecord()}>
+                Record money
+                <kbd className="hidden md:inline num text-[11px] border border-black/25 rounded px-1.5 leading-4">R</kbd>
               </button>
             </div>
-            <MaskNumber number={Number(balance)?.toLocaleString()} className="text-2xl font-bold text-white" />
+          </div>
+        </div>
+
+        {/* Summary */}
+        <section aria-label="Pot summary" className="card p-5 sm:p-6 flex flex-col gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-0">
+            <Figure label="In the account" first>
+              <Money value={balance} className="text-[26px] sm:text-[30px] font-medium" />
+              <span className="text-xs text-muted">
+                {lastAdjust ? `Updated ${shortDate(lastAdjust._d)} · ` : ""}
+                <button type="button" className="text-mint hover:underline underline-offset-2" onClick={() => editPotDetails("balance")}>
+                  Update balance
+                </button>
+              </span>
+            </Figure>
+            <Figure label="In envelopes">
+              <Money value={assigned} className="text-[26px] sm:text-[30px] font-medium" />
+              <span className="text-xs text-muted">
+                {parts.length} envelope{parts.length === 1 ? "" : "s"}
+              </span>
+            </Figure>
+            <Figure label="Unassigned">
+              <Money value={free} className={`text-[26px] sm:text-[30px] font-medium ${free < -0.004 ? "text-danger" : ""}`} />
+              <span className="text-xs text-muted">Account minus envelopes</span>
+            </Figure>
           </div>
 
-          {/* Free money */}
-          <button
-            onClick={() => openModal(<FreeMoneySummary freeMoney={freeMoney} isValid={!freeMoneyIsInvalid} />)}
-            className="glass-sm p-4 text-left w-full transition-all duration-200"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-white/40 text-xs uppercase tracking-wider font-semibold">Free Money</p>
-              <FontAwesomeIcon icon={faUnlock} className={`text-xs ${freeMoneyIsInvalid ? "text-brand-rose" : "text-brand-cyan"}`} />
+          <AllocationBar parts={parts} balance={balance} height={10} />
+
+          {health && (
+            <div
+              className={`flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl px-3.5 py-3 ${
+                health.tone === "over" ? "bg-[rgba(255,122,107,0.09)]" : "bg-[rgba(94,230,176,0.07)]"
+              }`}
+              role={health.tone === "over" ? "alert" : "status"}
+            >
+              <span className={`flex items-baseline gap-2 min-w-0 max-w-full font-semibold ${health.tone === "over" ? "text-danger" : "text-mint"}`}>
+                <span className={`status-dot flex-none self-center ${health.tone === "free" ? "border-[1.5px] border-mint" : health.tone === "over" ? "bg-danger" : "bg-mint"}`} />
+                <span className="min-w-0 [overflow-wrap:anywhere]">{health.title}</span>
+              </span>
+              <span className="text-ink-2 flex-[1_1_260px] min-w-0">{health.text}</span>
+              {health.action && (
+                <button type="button" className="btn-ghost btn-sm" onClick={health.onAction}>
+                  {health.action}
+                </button>
+              )}
             </div>
-            <p className={`text-2xl font-bold tabular-nums ${freeMoneyIsInvalid ? "text-brand-rose" : "text-brand-cyan"}`}>
-              {freeMoney?.toLocaleString()}
-            </p>
-            {freeMoneyIsInvalid && <p className="text-brand-rose text-xs mt-1 font-medium">Over-allocated</p>}
-          </button>
+          )}
+        </section>
 
-          {/* Checksum */}
-          <button
-            onClick={() => openModal(
-              <ChecksumSummary
-                balance={balance}
-                freeMoney={freeMoney}
-                sumOfAllPartitionBalance={sumOfAllPartitionBalance}
-                freeMoneyIsInvalid={freeMoneyIsInvalid}
-                isValid={checkSumIsValid}
-                onlySumValidity={onlySumValidity}
-              />
-            )}
-            className="glass-sm p-4 text-left w-full transition-all duration-200"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-white/40 text-xs uppercase tracking-wider font-semibold">Checksum</p>
-              <FontAwesomeIcon
-                icon={checkSumIsValid ? faCircleCheck : faCircleXmark}
-                className={`text-sm ${checkSumIsValid ? "text-brand-emerald" : "text-brand-rose"}`}
-              />
+        <Tabs tabs={tabs} value={tab} onChange={changeTab} label="Pot views" idPrefix="pot" />
+
+        <div role="tabpanel" id={`pot-panel-${tab}`} aria-labelledby={`pot-${tab}`}>
+          {tab === "envelopes" && (
+            <div className="flex flex-wrap gap-6 items-start">
+              <div className="flex-[999_1_600px] min-w-0">
+                <Envelopes
+                  parts={parts}
+                  txns={potTxns}
+                  currency={cur}
+                  assigned={assigned}
+                  onCreate={() => createOrEditEnvelope()}
+                  onEdit={createOrEditEnvelope}
+                  onDelete={deleteEnvelope}
+                  onRecord={(mode, part) => openRecord({ mode, partId: part.id })}
+                />
+              </div>
+              <aside className="flex-[1_1_300px] min-w-0 flex flex-col gap-4">
+                <section aria-labelledby="month-h" className="card p-5 flex flex-col gap-3.5">
+                  <h2 id="month-h" className="m-0 text-sm font-semibold">{format(new Date(), "MMMM")} so far</h2>
+                  <MonthBar label="Money in" value={monthIn} max={Math.max(monthIn, monthOut)} tone="in" />
+                  <MonthBar label="Money out" value={monthOut} max={Math.max(monthIn, monthOut)} tone="out" />
+                  <p className="m-0 text-muted text-[13px]">
+                    {topOut ? (
+                      <>
+                        Most spent from <span className="text-ink">{topOut[0]}</span>: <Money value={topOut[1].amount} /> across{" "}
+                        {topOut[1].n} entr{topOut[1].n === 1 ? "y" : "ies"}
+                      </>
+                    ) : (
+                      "Nothing has gone out this month."
+                    )}
+                  </p>
+                </section>
+                <button
+                  type="button"
+                  onClick={() => changeTab("loans")}
+                  className="card p-5 flex flex-col gap-1.5 text-left transition-colors hover:border-line-strong"
+                >
+                  <span className="text-sm font-semibold">Loans from this pot</span>
+                  {openLoans.length ? (
+                    <>
+                      <Money value={owed} className="text-[22px] text-amber" />
+                      <span className="text-muted text-[13px]">
+                        {openLoans.length} open · oldest {shortDate(oldestLoan?._d)} · View loans →
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-muted text-[13px]">Nothing owed. View history →</span>
+                  )}
+                </button>
+              </aside>
             </div>
-            <p className={`text-2xl font-bold ${checkSumIsValid ? "text-brand-emerald" : "text-brand-rose"}`}>
-              {checkSumIsValid ? "Valid" : "Invalid"}
-            </p>
-            <p className="text-white/30 text-xs mt-1">
-              {checkSumIsValid ? "All allocations balance" : "Tap to see details"}
-            </p>
-          </button>
+          )}
+          {tab === "activity" && <Activity txns={potTxns} parts={parts} pot={pot} />}
+          {tab === "loans" && <Loans loans={potLoans} pot={pot} focusLoanId={focusLoanId} />}
         </div>
+      </main>
 
-        {/* ── Add partition ── */}
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-white/35 text-sm">
-            {(parts || []).length} partition{(parts || []).length !== 1 ? "s" : ""}
-          </p>
-          <button onClick={() => createOrEditPartition()} className="btn-ghost text-sm">
-            <FontAwesomeIcon icon={faPlus} className="text-brand-emerald" />
-            Add Partition
-          </button>
-        </div>
-
-        <TabViewer tabs={tabs} />
+      {/* Phone: primary action within thumb reach */}
+      <div
+        className="sm:hidden fixed inset-x-0 bottom-0 z-30 px-4 pt-6 bg-gradient-to-t from-bg from-60% to-transparent"
+        style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))" }}
+      >
+        <button type="button" className="btn-primary btn-lg w-full" onClick={() => openRecord()}>
+          <Icon name="plus" size={18} strokeWidth={2.2} />
+          Record money
+        </button>
       </div>
-    </AuthGuard>
+    </div>
+  );
+}
+
+function Figure({ label, children, first }) {
+  return (
+    <div className={`flex flex-col gap-1.5 ${first ? "sm:pr-6" : "sm:px-6 sm:border-l sm:border-line"}`}>
+      <span className="text-[13px] text-muted">{label}</span>
+      {children}
+    </div>
+  );
+}
+
+function MonthBar({ label, value, max, tone }) {
+  const pct = max > 0 ? (value / max) * 100 : 0;
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex justify-between gap-3">
+        <span className="text-muted">{label}</span>
+        <Money value={value} sign={value ? (tone === "in" ? "in" : "out") : "none"} className={tone === "in" && value ? "text-mint" : ""} />
+      </div>
+      <span className="h-1.5 rounded-full bg-line overflow-hidden">
+        <span className="block h-full rounded-full" style={{ width: `${pct}%`, background: tone === "in" ? "var(--mint)" : "var(--muted)" }} />
+      </span>
+    </div>
   );
 }
 

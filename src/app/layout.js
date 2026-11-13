@@ -1,72 +1,38 @@
-import { Geist, Geist_Mono, Manrope } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-const manrope = Manrope({
-  variable: "--font-manrope",
-  subsets: ["latin"],
-});
+const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata = {
-  title: "The Lean Bank",
-  description: "Personal finance brought to you by The Lean Bank",
+  title: { default: "Lean Bank", template: "%s · Lean Bank" },
+  description: "Split every account into envelopes, track what moves, and keep tabs on what you've lent yourself.",
+  applicationName: "Lean Bank",
+  appleWebApp: { capable: true, title: "Lean Bank", statusBarStyle: "black-translucent" },
   icons: {
     icon: [
-      {
-        rel: "icon",
-        type: "image/png",
-        sizes: "16x16",
-        url: "/favicon-16x16.png",
-      },
-      {
-        rel: "icon",
-        type: "image/png",
-        sizes: "32x32",
-        url: "/favicon-32x32.png",
-      },
-      {
-        rel: "icon",
-        type: "image/png",
-        sizes: "48x48",
-        url: "/favicon-48x48.png",
-      },
-      {
-        rel: "apple-touch-icon",
-        sizes: "180x180",
-        url: "/apple-touch-icon.png",
-      },
-      {
-        rel: "icon",
-        type: "image/png",
-        sizes: "192x192",
-        url: "/android-chrome-192x192.png",
-      },
-      {
-        rel: "icon",
-        type: "image/png",
-        sizes: "512x512",
-        url: "/android-chrome-512x512.png",
-      },
+      { url: "/logo.svg", type: "image/svg+xml" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-48x48.png", sizes: "48x48", type: "image/png" },
     ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
+  themeColor: "#0b0c0e",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} antialiased`}
-      >
-        {children}
-      </body>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>{children}</body>
     </html>
   );
 }

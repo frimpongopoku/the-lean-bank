@@ -1,42 +1,24 @@
 "use client";
 import { useRouter } from "next/navigation";
-import PropTypes from "prop-types";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faArrowLeft,
-  faExclamationTriangle,
-} from "@fortawesome/free-solid-svg-icons";
+import Icon from "./ui/Icon";
 
-const Fallback = ({ message = "Something went wrong.", backUrl = "/" }) => {
+const Fallback = ({ message = "Something went wrong.", backUrl = "/", title = "Not found" }) => {
   const router = useRouter();
-  const handleGoBack = () => {
-    if (backUrl) return router.push(backUrl);
-    router.back();
-  };
-
   return (
-    <div className="flex items-center justify-center h-screen">
-      <div className="glass text-center flex flex-col items-center px-10 py-12 max-w-sm w-full animate-scale-in">
-        <div className="w-14 h-14 rounded-full bg-brand-amber/10 flex items-center justify-center mb-5">
-          <FontAwesomeIcon
-            icon={faExclamationTriangle}
-            className="text-brand-amber text-xl"
-          />
-        </div>
-        <h1 className="text-xl font-bold text-white mb-2">Oops!</h1>
-        <p className="text-text-muted mb-7 text-sm leading-relaxed">{message}</p>
-        <button onClick={handleGoBack} className="btn-ghost text-sm">
-          <FontAwesomeIcon icon={faArrowLeft} />
-          Go Back
+    <div className="flex items-center justify-center min-h-[100dvh] px-4">
+      <div className="card text-center flex flex-col items-center px-8 py-10 max-w-sm w-full gap-3">
+        <span className="w-11 h-11 rounded-full bg-raised text-amber inline-flex items-center justify-center">
+          <Icon name="alert" size={20} />
+        </span>
+        <h1 className="text-lg font-semibold text-ink m-0">{title}</h1>
+        <p className="text-muted text-sm m-0 mb-3">{message}</p>
+        <button onClick={() => (backUrl ? router.push(backUrl) : router.back())} className="btn-ghost">
+          <Icon name="chevronLeft" />
+          Back to pots
         </button>
       </div>
     </div>
   );
-};
-
-Fallback.propTypes = {
-  message: PropTypes.string,
-  backUrl: PropTypes.string,
 };
 
 export default Fallback;

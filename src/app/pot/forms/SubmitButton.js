@@ -1,9 +1,11 @@
-const SubmitButton = ({ text = "Submit" }) => {
-  return (
-    <button type="submit" className="btn-primary w-full justify-center mt-2">
-      {text}
-    </button>
-  );
-};
+const SubmitButton = ({ text = "Save", disabled, tone = "primary" }) => (
+  <button
+    type="submit"
+    disabled={disabled}
+    className={`${tone === "danger" ? "btn-danger" : "btn-primary"} btn-lg w-full`}
+  >
+    {text}
+  </button>
+);
 
 export default SubmitButton;

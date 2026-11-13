@@ -1,33 +1,31 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faArrowLeft, faUser, faPalette, faDownload,
-  faArrowRightFromBracket, faCheck,
-} from "@fortawesome/free-solid-svg-icons";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/app/auth/context/AuthContext";
 import { useToast } from "@/app/components/ToastProvider";
 import { usePots } from "@/app/hooks/contexts/usePots";
 import { useTransactions } from "@/app/hooks/contexts/useTransactions";
 import { useBorrow } from "@/app/hooks/contexts/useBorrow";
-import { getUserCollection } from "@/app/auth/utils/firestore-utils";
+import useUserData from "@/app/hooks/useUserData";
 import { updateProfile } from "firebase/auth";
 import { auth } from "@/app/auth/utils/firebaseConfig";
 import { saveAs } from "file-saver";
 import AuthGuard from "@/app/auth/AuthGuard";
 import Loading from "@/app/components/Loading";
-import { UNDEFINED } from "@/app/auth/context/AuthContext";
+import AppHeader, { Avatar } from "@/app/components/ui/AppHeader";
+import Icon from "@/app/components/ui/Icon";
+import { setAmountsHidden, useAmountsHidden } from "@/app/components/ui/money";
 
 const CURRENCY_KEY = "tlb_default_currency";
 
 export default function SettingsView({ userId }) {
-  const router = useRouter();
   const { user, logout } = useAuth();
   const toast = useToast();
-  const { potData, setPotData } = usePots();
-  const { transactions, setTransactions } = useTransactions();
-  const { borrows, setBorrows } = useBorrow();
+  const status = useUserData(user?.uid || userId);
+  const { potData } = usePots();
+  const { transactions } = useTransactions() || {};
+  const { borrows } = useBorrow() || {};
+  const hidden = useAmountsHidden();
 
   const [displayName, setDisplayName] = useState("");
   const [defaultCurrency, setDefaultCurrency] = useState("");
@@ -38,38 +36,33 @@ export default function SettingsView({ userId }) {
   }, [user?.displayName]);
 
   useEffect(() => {
-    setDefaultCurrency(localStorage.getItem(CURRENCY_KEY) || "");
+    try {
+      setDefaultCurrency(localStorage.getItem(CURRENCY_KEY) || "");
+    } catch {}
   }, []);
 
-  useEffect(() => {
-    if (!userId) return;
-    getUserCollection(userId).then((data) => {
-      if (!data) return;
-      const { TRANSACTIONS, POTS, BORROWED } = data;
-      setPotData(POTS);
-      setTransactions(TRANSACTIONS);
-      setBorrows(BORROWED);
-    });
-  }, [userId]);
+  if (status === "loading") return <Loading full />;
 
-  if (potData?.key === UNDEFINED) return <Loading full />;
-
-  const saveDisplayName = async () => {
+  const saveDisplayName = async (e) => {
+    e.preventDefault();
     if (!displayName.trim()) return;
     setSavingName(true);
     try {
       await updateProfile(auth.currentUser, { displayName: displayName.trim() });
-      toast.success("Display name updated");
+      toast.success("Name updated");
     } catch {
-      toast.error("Failed to update display name");
+      toast.error("Couldn't update your name");
     } finally {
       setSavingName(false);
     }
   };
 
-  const saveDefaultCurrency = () => {
-    localStorage.setItem(CURRENCY_KEY, defaultCurrency.trim().toUpperCase());
-    toast.success("Default currency saved");
+  const saveDefaultCurrency = (e) => {
+    e.preventDefault();
+    try {
+      localStorage.setItem(CURRENCY_KEY, defaultCurrency.trim().toUpperCase());
+    } catch {}
+    toast.success(defaultCurrency.trim() ? `New pots start in ${defaultCurrency.trim().toUpperCase()}` : "Default currency cleared");
   };
 
   const exportAllData = () => {
@@ -79,155 +72,111 @@ export default function SettingsView({ userId }) {
       transactions: transactions || [],
       borrows: borrows || [],
     };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    saveAs(blob, `lean-bank-export-${Date.now()}.json`);
-    toast.success("Data exported");
+    saveAs(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }), `lean-bank-export-${Date.now()}.json`);
+    toast.success("Export downloaded");
   };
 
-  const initials = (user?.displayName || user?.email || "?")
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
   return (
-    <AuthGuard signout>
-      <div className="min-h-screen px-4 sm:px-6 py-8 max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <button
-            onClick={() => router.back()}
-            aria-label="Go back"
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-white/45 hover:text-white transition-colors"
-            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
-          >
-            <FontAwesomeIcon icon={faArrowLeft} className="text-sm" />
-          </button>
-          <h1 className="text-2xl font-bold text-white">Settings</h1>
-        </div>
+    <AuthGuard>
+      <div className="min-h-[100dvh]">
+        <AppHeader />
+        <main className="max-w-[720px] mx-auto px-4 sm:px-8 pt-7 pb-16 flex flex-col gap-6">
+          <div className="flex flex-col gap-2.5">
+            <nav aria-label="Breadcrumb" className="text-[13px] text-muted">
+              <Link href="/home" className="text-muted hover:text-ink">Pots</Link>
+              <span aria-hidden="true" className="mx-1.5">/</span>
+              <span className="text-ink" aria-current="page">Settings</span>
+            </nav>
+            <h1 className="m-0 text-[28px] font-semibold tracking-[-0.02em]">Settings</h1>
+          </div>
 
-        <div className="space-y-4">
-          {/* Profile */}
-          <section className="glass-sm p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <FontAwesomeIcon icon={faUser} className="text-brand-cyan text-sm" />
-              <h2 className="text-white font-semibold text-sm uppercase tracking-wider">Profile</h2>
-            </div>
-
-            <div className="flex items-center gap-4 mb-5">
-              <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold text-brand-emerald flex-shrink-0"
-                style={{ background: "rgba(16,185,129,0.12)" }}
-              >
-                {initials}
-              </div>
-              <div>
-                <p className="text-white font-semibold">{user?.displayName || "—"}</p>
-                <p className="text-white/40 text-sm">{user?.email}</p>
+          <Section title="Profile">
+            <div className="flex items-center gap-4">
+              <Avatar user={user} className="w-12 h-12" />
+              <div className="min-w-0">
+                <p className="m-0 font-medium truncate">{user?.displayName || "—"}</p>
+                <p className="m-0 text-muted text-sm [overflow-wrap:anywhere]">{user?.email}</p>
               </div>
             </div>
-
-            <div className="space-y-2">
-              <label className="text-white/50 text-xs uppercase tracking-wider font-semibold block">
-                Display name
-              </label>
+            <form onSubmit={saveDisplayName} className="flex flex-col gap-1.5">
+              <label className="field-label !mb-0" htmlFor="set-name">Display name</label>
               <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  maxLength={40}
-                  placeholder="Your name"
-                  className="flex-1 px-3 py-2.5 text-sm rounded-xl text-white/90"
-                  style={{
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    outline: "none",
-                  }}
-                />
-                <button
-                  onClick={saveDisplayName}
-                  disabled={savingName}
-                  className="btn-primary text-sm px-4"
-                >
-                  <FontAwesomeIcon icon={faCheck} />
+                <input id="set-name" className="field flex-1 min-w-0" value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={40} placeholder="Your name" autoComplete="name" />
+                <button type="submit" className="btn-ghost !h-11" disabled={savingName || !displayName.trim() || displayName.trim() === user?.displayName}>
                   {savingName ? "Saving…" : "Save"}
                 </button>
               </div>
-            </div>
-          </section>
+            </form>
+          </Section>
 
-          {/* Preferences */}
-          <section className="glass-sm p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <FontAwesomeIcon icon={faPalette} className="text-brand-violet text-sm" />
-              <h2 className="text-white font-semibold text-sm uppercase tracking-wider">Preferences</h2>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-white/50 text-xs uppercase tracking-wider font-semibold block">
-                Default currency
-              </label>
+          <Section title="Preferences">
+            <form onSubmit={saveDefaultCurrency} className="flex flex-col gap-1.5">
+              <label className="field-label !mb-0" htmlFor="set-cur">Default currency</label>
               <div className="flex gap-2">
                 <input
-                  type="text"
+                  id="set-cur"
+                  className="field !w-28 uppercase"
                   value={defaultCurrency}
-                  onChange={(e) => setDefaultCurrency(e.target.value)}
+                  onChange={(e) => setDefaultCurrency(e.target.value.toUpperCase())}
                   maxLength={3}
-                  placeholder="e.g. GHS"
-                  className="w-28 px-3 py-2.5 text-sm rounded-xl text-white/90 uppercase"
-                  style={{
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    outline: "none",
-                  }}
+                  placeholder="GHS"
+                  autoCapitalize="characters"
+                  autoComplete="off"
                 />
-                <button onClick={saveDefaultCurrency} className="btn-primary text-sm px-4">
-                  <FontAwesomeIcon icon={faCheck} />
-                  Save
-                </button>
+                <button type="submit" className="btn-ghost !h-11">Save</button>
               </div>
-              <p className="text-white/30 text-xs">
-                Pre-fills the currency field when creating a new pot.
-              </p>
+              <p className="m-0 text-[13px] text-muted">Filled in for you when you create a pot.</p>
+            </form>
+            <div className="flex items-center justify-between gap-4 pt-4 border-t border-line">
+              <div>
+                <p className="m-0 font-medium">Hide amounts</p>
+                <p className="m-0 text-[13px] text-muted">Show dots instead of numbers on this device. Toggle anytime from the top bar.</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={hidden}
+                aria-label="Hide amounts"
+                onClick={() => setAmountsHidden(!hidden)}
+                className={`relative w-11 h-[26px] rounded-full flex-none transition-colors duration-150 ${hidden ? "bg-mint" : "bg-line-strong"}`}
+              >
+                <span
+                  className="absolute top-[3px] left-[3px] w-5 h-5 rounded-full bg-ink shadow transition-transform duration-200 ease-out"
+                  style={{ transform: hidden ? "translateX(18px)" : "translateX(0)" }}
+                />
+              </button>
             </div>
-          </section>
+          </Section>
 
-          {/* Data */}
-          <section className="glass-sm p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <FontAwesomeIcon icon={faDownload} className="text-brand-amber text-sm" />
-              <h2 className="text-white font-semibold text-sm uppercase tracking-wider">Data Export</h2>
+          <Section title="Your data">
+            <p className="m-0 text-muted text-sm">Download everything (pots, envelopes, activity and loans) as one JSON file.</p>
+            <div>
+              <button type="button" onClick={exportAllData} className="btn-ghost">
+                <Icon name="download" />
+                Export all data
+              </button>
             </div>
-            <p className="text-white/40 text-sm mb-4">
-              Download a full JSON snapshot of all your pots, transactions, and borrows.
-            </p>
-            <button onClick={exportAllData} className="btn-ghost text-sm">
-              <FontAwesomeIcon icon={faDownload} className="text-brand-emerald" />
-              Export all data
-            </button>
-          </section>
+          </Section>
 
-          {/* Account */}
-          <section className="glass-sm p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <FontAwesomeIcon icon={faArrowRightFromBracket} className="text-brand-rose text-sm" />
-              <h2 className="text-white font-semibold text-sm uppercase tracking-wider">Account</h2>
+          <Section title="Account">
+            <div>
+              <button type="button" onClick={logout} className="btn-ghost text-danger">
+                <Icon name="logout" />
+                Sign out
+              </button>
             </div>
-            <button
-              onClick={logout}
-              className="flex items-center gap-2 text-sm font-semibold text-brand-rose px-4 py-2.5 rounded-xl transition-all"
-              style={{ background: "rgba(244,63,94,0.08)", border: "1px solid rgba(244,63,94,0.18)" }}
-              onMouseOver={(e) => { e.currentTarget.style.background = "rgba(244,63,94,0.16)"; }}
-              onMouseOut={(e) => { e.currentTarget.style.background = "rgba(244,63,94,0.08)"; }}
-            >
-              <FontAwesomeIcon icon={faArrowRightFromBracket} />
-              Sign out
-            </button>
-          </section>
-        </div>
+          </Section>
+        </main>
       </div>
     </AuthGuard>
+  );
+}
+
+function Section({ title, children }) {
+  return (
+    <section className="card p-5 sm:p-6 flex flex-col gap-4" aria-label={title}>
+      <h2 className="m-0 text-[13px] font-medium text-muted">{title}</h2>
+      {children}
+    </section>
   );
 }

@@ -5,6 +5,7 @@ import { BorrowProvider } from "@/app/hooks/contexts/useBorrow";
 import { ToastProvider } from "@/app/components/ToastProvider";
 import ErrorBoundary from "@/app/components/ErrorBoundary";
 import SettingsView from "./SettingsView";
+import AuthGuard from "@/app/auth/AuthGuard";
 
 async function SettingsPage({ searchParams }) {
   const sp = await searchParams;
@@ -16,7 +17,9 @@ async function SettingsPage({ searchParams }) {
           <PotsProvider>
             <TransactionProvider>
               <BorrowProvider>
-                <SettingsView userId={userId} />
+                <AuthGuard>
+                  <SettingsView userId={userId} />
+                </AuthGuard>
               </BorrowProvider>
             </TransactionProvider>
           </PotsProvider>

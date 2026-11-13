@@ -1,113 +1,119 @@
 "use client";
-import { createContext, useCallback, useContext, useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faCircleCheck,
-  faCircleXmark,
-  faCircleInfo,
-  faXmark,
-} from "@fortawesome/free-solid-svg-icons";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import Icon from "./ui/Icon";
 
 const ToastContext = createContext(null);
 
-const STYLES = {
-  success: {
-    icon: faCircleCheck,
-    color: "#10b981",
-    bg: "rgba(16,185,129,0.12)",
-    border: "rgba(16,185,129,0.28)",
-  },
-  error: {
-    icon: faCircleXmark,
-    color: "#f43f5e",
-    bg: "rgba(244,63,94,0.12)",
-    border: "rgba(244,63,94,0.28)",
-  },
-  info: {
-    icon: faCircleInfo,
-    color: "#22d3ee",
-    bg: "rgba(34,211,238,0.12)",
-    border: "rgba(34,211,238,0.28)",
-  },
+const TONES = {
+  success: { icon: "check", color: "var(--mint)" },
+  error: { icon: "alert", color: "var(--danger)" },
+  info: { icon: "info", color: "var(--muted)" },
 };
+
+const EXIT_MS = 200;
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
+  const timers = useRef(new Map());
+  const paused = useRef(false);
 
-  const dismiss = useCallback((id) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+  const remove = useCallback((id) => {
+    setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, closing: true } : t)));
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), EXIT_MS);
+    const tm = timers.current.get(id);
+    if (tm) clearTimeout(tm.handle);
+    timers.current.delete(id);
   }, []);
 
-  const addToast = useCallback(
-    (type, message, opts = {}) => {
-      const id = Math.random().toString(36).slice(2);
-      const duration = opts.duration ?? 3500;
-      setToasts((prev) => [
-        ...prev,
-        { id, type, message, undoFn: opts.undo ?? null },
-      ]);
-      const timer = setTimeout(() => dismiss(id), duration);
-      return () => clearTimeout(timer);
+  const schedule = useCallback(
+    (id, ms) => {
+      const handle = setTimeout(() => remove(id), ms);
+      timers.current.set(id, { handle, start: Date.now(), remaining: ms });
     },
-    [dismiss]
+    [remove]
   );
 
-  const toast = {
-    success: (msg, opts) => addToast("success", msg, opts),
-    error: (msg, opts) => addToast("error", msg, opts),
-    info: (msg, opts) => addToast("info", msg, opts),
-  };
+  // Pause every timer while hovered or while the tab is hidden, so a toast
+  // with Undo never expires unseen.
+  const pauseAll = useCallback(() => {
+    if (paused.current) return;
+    paused.current = true;
+    timers.current.forEach((tm) => {
+      clearTimeout(tm.handle);
+      tm.remaining -= Date.now() - tm.start;
+    });
+  }, []);
+  const resumeAll = useCallback(() => {
+    if (!paused.current) return;
+    paused.current = false;
+    timers.current.forEach((tm, id) => {
+      tm.start = Date.now();
+      tm.handle = setTimeout(() => remove(id), Math.max(tm.remaining, 800));
+    });
+  }, [remove]);
+
+  useEffect(() => {
+    const onVis = () => (document.hidden ? pauseAll() : resumeAll());
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, [pauseAll, resumeAll]);
+
+  const add = useCallback(
+    (type, message, opts = {}) => {
+      const id = Math.random().toString(36).slice(2);
+      setToasts((prev) => [...prev.slice(-2), { id, type, message, undoFn: opts.undo ?? null }]);
+      schedule(id, opts.duration ?? (opts.undo ? 6000 : 3500));
+      return id;
+    },
+    [schedule]
+  );
+
+  const toast = useMemo(
+    () => ({
+      success: (m, o) => add("success", m, o),
+      error: (m, o) => add("error", m, o),
+      info: (m, o) => add("info", m, o),
+    }),
+    [add]
+  );
 
   return (
     <ToastContext.Provider value={toast}>
       {children}
       <div
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex flex-col-reverse gap-2 items-center pointer-events-none"
-        style={{ minWidth: 300, maxWidth: "90vw" }}
+        aria-live="polite"
+        className="fixed left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-2 items-center w-[min(420px,calc(100vw-32px))]"
+        style={{ bottom: "calc(16px + env(safe-area-inset-bottom, 0px))" }}
+        onPointerEnter={pauseAll}
+        onPointerLeave={resumeAll}
       >
         {toasts.map((t) => {
-          const s = STYLES[t.type] || STYLES.info;
+          const tone = TONES[t.type] || TONES.info;
           return (
             <div
               key={t.id}
-              className="animate-slide-up pointer-events-auto w-full flex items-center gap-3 px-4 py-3 rounded-2xl"
-              style={{
-                background: s.bg,
-                border: `1px solid ${s.border}`,
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-                boxShadow: "0 8px 32px rgba(0,0,0,0.55)",
-              }}
+              role="status"
+              data-state={t.closing ? "closed" : "open"}
+              className="toast w-full flex items-center gap-3 pl-4 pr-2 min-h-[48px] py-1.5 rounded-xl bg-raised border border-line-strong shadow-[0_12px_32px_rgba(0,0,0,0.5)]"
             >
-              <FontAwesomeIcon
-                icon={s.icon}
-                style={{ color: s.color }}
-                className="flex-shrink-0 text-sm"
-              />
-              <span className="text-white/85 text-sm flex-1 leading-snug">
-                {t.message}
+              <span style={{ color: tone.color }} className="flex-none">
+                <Icon name={tone.icon} size={16} strokeWidth={2.2} />
               </span>
+              <span className="text-ink text-sm flex-1 leading-snug py-1.5">{t.message}</span>
               {t.undoFn && (
                 <button
+                  type="button"
                   onClick={() => {
                     t.undoFn();
-                    dismiss(t.id);
+                    remove(t.id);
                   }}
-                  className="text-xs font-bold px-2.5 py-1 rounded-lg flex-shrink-0 transition-all"
-                  style={{
-                    color: s.color,
-                    background: `${s.color}20`,
-                    border: `1px solid ${s.color}40`,
-                  }}
+                  className="btn-quiet btn-sm text-mint font-semibold"
                 >
                   Undo
                 </button>
               )}
-              <button
-                onClick={() => dismiss(t.id)}
-                className="text-white/30 hover:text-white/65 transition-colors flex-shrink-0 ml-1"
-              >
-                <FontAwesomeIcon icon={faXmark} className="text-xs" />
+              <button type="button" onClick={() => remove(t.id)} className="icon-btn w-8 h-8" aria-label="Dismiss">
+                <Icon name="x" size={14} />
               </button>
             </div>
           );

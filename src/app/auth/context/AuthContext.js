@@ -7,10 +7,11 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 const AuthContext = createContext();
 
 export const UNDEFINED = "UNDEFINED";
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(UNDEFINED);
+export const AuthProvider = ({ children, previewUser }) => {
+  const [user, setUser] = useState(previewUser || UNDEFINED);
 
   useEffect(() => {
+    if (previewUser) return;
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
     });
@@ -18,6 +19,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = async () => {
+    if (previewUser) return;
     await signOut(auth);
   };
 

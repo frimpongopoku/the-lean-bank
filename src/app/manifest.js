@@ -1,0 +1,16 @@
+export default function manifest() {
+  return {
+    name: "Lean Bank",
+    short_name: "Lean Bank",
+    description: "Split every account into envelopes and track what moves.",
+    start_url: "/home",
+    display: "standalone",
+    background_color: "#0b0c0e",
+    theme_color: "#0b0c0e",
+    icons: [
+      { src: "/android-chrome-192x192.png", sizes: "192x192", type: "image/png" },
+      { src: "/android-chrome-512x512.png", sizes: "512x512", type: "image/png" },
+      { src: "/logo.svg", sizes: "any", type: "image/svg+xml" },
+    ],
+  };
+}

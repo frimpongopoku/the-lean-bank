@@ -3,6 +3,11 @@ import { db } from "./firebaseConfig";
 import { makeDate } from "@/app/lib/utils";
 
 export const POTS = "POTS";
+
+// Dev-only preview (/preview): serve fixtures and swallow writes so the
+// real database is never read or touched.
+export const PREVIEW = { on: false, data: null };
+const previewOn = () => process.env.NODE_ENV === "development" && PREVIEW.on;
 export const TRANSACTIONS = "TRANSACTIONS";
 export const BORROWED = "BORROWED";
 
@@ -11,6 +16,7 @@ export const BORROWED = "BORROWED";
  * @param {string} userId - The authenticated user's ID
  */
 export const initUserCollection = async (userId, cb) => {
+  if (previewOn()) return cb && cb(true);
   try {
     const userCollectionRef = collection(db, userId);
     const userDocRef = doc(userCollectionRef, "meta");
@@ -49,6 +55,7 @@ export const initUserCollection = async (userId, cb) => {
  * @returns {object} - The entire user collection data
  */
 export const getUserCollection = async (userId) => {
+  if (previewOn()) return JSON.parse(JSON.stringify(PREVIEW.data || {}));
   try {
     const userCollectionRef = collection(db, userId);
     const querySnapshot = await getDocs(userCollectionRef);
@@ -71,6 +78,7 @@ export const getUserCollection = async (userId) => {
  * @param {object} potsData - The new POTS data to update
  */
 export const updatePots = async (userId, potsData) => {
+  if (previewOn()) return;
   try {
     const potsRef = doc(db, userId, POTS);
     await setDoc(potsRef, potsData, { merge: true });
@@ -90,6 +98,7 @@ export const updateTransactionsInFirestore = async (
   userId,
   transactionsData
 ) => {
+  if (previewOn()) return;
   try {
     const transactionsRef = doc(db, userId, TRANSACTIONS);
     // await setDoc(transactionsRef, transactionsData, { merge: true });
@@ -107,6 +116,7 @@ export const updateTransactionsInFirestore = async (
  * @param {object} borrowedData - The new BORROWED data to update
  */
 export const updateBorrowed = async (userId, borrowedData) => {
+  if (previewOn()) return;
   try {
     const borrowedRef = doc(db, userId, BORROWED);
     await setDoc(borrowedRef, borrowedData, { merge: true });
@@ -126,6 +136,7 @@ export const NOT_FOUND = "NOT_FOUND";
  * @returns {Promise<Array>} - An array of pots.
  */
 export const getAllPots = async (collectionId) => {
+  if (previewOn()) return PREVIEW.data?.POTS || NOT_FOUND;
   try {
     const potDocRef = doc(db, collectionId, POTS);
     const potSnapshot = await getDoc(potDocRef);
@@ -148,6 +159,7 @@ export const getAllPots = async (collectionId) => {
  * @param {Array} pots - The array of pots to be stored in Firestore.
  */
 export async function updatePotsInFirestore(collectionId, potData) {
+  if (previewOn()) return;
   try {
     const potsRef = doc(db, collectionId, POTS);
     // await setDoc(potsRef, { pots }, { merge: true }); // Merges existing data
@@ -164,6 +176,7 @@ export async function updatePotsInFirestore(collectionId, potData) {
  * @param {object} borrowsData - The new BORROWS data to update
  */
 export const updateBorrowsInFirestore = async (userId, borrowsData) => {
+  if (previewOn()) return;
   try {
     const borrowsRef = doc(db, userId, BORROWED);
     // await setDoc(borrowsRef, borrowsData, { merge: true });

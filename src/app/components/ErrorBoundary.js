@@ -1,7 +1,6 @@
 "use client";
 import React from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
+import Icon from "./ui/Icon";
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -20,32 +19,16 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex items-center justify-center min-h-screen">
-          <div
-            className="text-center px-10 py-12 max-w-sm w-full animate-scale-in"
-            style={{
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: "20px",
-              backdropFilter: "blur(16px)",
-            }}
-          >
-            <div className="w-14 h-14 rounded-full bg-brand-rose/10 flex items-center justify-center mx-auto mb-5">
-              <FontAwesomeIcon
-                icon={faTriangleExclamation}
-                className="text-brand-rose text-xl"
-              />
-            </div>
-            <h1 className="text-white font-bold text-lg mb-2">
-              Something went wrong
-            </h1>
-            <p className="text-white/45 text-sm mb-7 leading-relaxed">
+        <div className="flex items-center justify-center min-h-[100dvh] px-4">
+          <div className="card text-center flex flex-col items-center gap-3 px-8 py-10 max-w-sm w-full">
+            <span className="w-11 h-11 rounded-full bg-raised text-danger inline-flex items-center justify-center">
+              <Icon name="alert" size={20} />
+            </span>
+            <h1 className="text-ink font-semibold text-lg m-0">Something went wrong</h1>
+            <p className="text-muted text-sm m-0 mb-3">
               {this.state.error?.message || "An unexpected error occurred."}
             </p>
-            <button
-              className="btn-ghost text-sm"
-              onClick={() => this.setState({ hasError: false, error: null })}
-            >
+            <button className="btn-ghost" onClick={() => this.setState({ hasError: false, error: null })}>
               Try again
             </button>
           </div>
